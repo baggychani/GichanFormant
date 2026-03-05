@@ -1,0 +1,14 @@
+# Python 캐시 파일
+__pycache__/
+*.pyc
+
+# IDE 설정 파일
+.idea/
+
+# 가상환경
+.venv/
+venv/
+env/
+
+# 문서 파일 (무시 요청하신 폴더)
+docs/
