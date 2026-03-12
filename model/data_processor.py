@@ -17,7 +17,9 @@ def _read_csv_with_encoding(path):
     last_err = None
     for enc in ENCODINGS:
         try:
-            return pd.read_csv(path, sep=None, engine="python", header=None, encoding=enc)
+            return pd.read_csv(
+                path, sep=None, engine="python", header=None, encoding=enc
+            )
         except (UnicodeDecodeError, UnicodeError) as e:
             last_err = e
             continue
@@ -50,13 +52,15 @@ class DataProcessor:
             try:
                 # 확장자에 따른 파일 읽기 방식 분기
                 ext = os.path.splitext(path)[1].lower()
-                if ext in ['.xls', '.xlsx']:
+                if ext in [".xls", ".xlsx"]:
                     temp_df = pd.read_excel(path, header=None)
                 else:
                     temp_df = _read_csv_with_encoding(path)
 
                 # 개별 파일 전처리 (실패 시 구체적 사유 반환)
-                processed_df, parse_error, drop_report = self._parse_fixed_columns(temp_df)
+                processed_df, parse_error, drop_report = self._parse_fixed_columns(
+                    temp_df
+                )
 
                 if parse_error:
                     errors.append((path, parse_error))
@@ -75,15 +79,15 @@ class DataProcessor:
 
         if dfs:
             self.df_all = pd.concat(dfs, ignore_index=True)
-            self.df_all.dropna(subset=['F1', 'F2'], inplace=True)
+            self.df_all.dropna(subset=["F1", "F2"], inplace=True)
 
             # 데이터 정밀도 유지를 위해 실수형(float)으로 통일
-            self.df_all['F1'] = self.df_all['F1'].astype(float)
-            self.df_all['F2'] = self.df_all['F2'].astype(float)
+            self.df_all["F1"] = self.df_all["F1"].astype(float)
+            self.df_all["F2"] = self.df_all["F2"].astype(float)
 
             # 유효한 F3 데이터가 존재하는 경우 타입 변환 및 상태 업데이트
-            if 'F3' in self.df_all.columns:
-                self.df_all['F3'] = self.df_all['F3'].astype(float)
+            if "F3" in self.df_all.columns:
+                self.df_all["F3"] = self.df_all["F3"].astype(float)
                 self.has_f3 = True
             else:
                 self.has_f3 = False
@@ -107,8 +111,8 @@ class DataProcessor:
         f1_col = df.iloc[:, 0]
         f2_col = df.iloc[:, 1]
 
-        f1_numeric = pd.to_numeric(f1_col, errors='coerce')
-        f2_numeric = pd.to_numeric(f2_col, errors='coerce')
+        f1_numeric = pd.to_numeric(f1_col, errors="coerce")
+        f2_numeric = pd.to_numeric(f2_col, errors="coerce")
 
         # 문자열 헤더 제거 및 F1 < F2 물리적 검증 (음성학적 예외 데이터 차단)
         valid_idx = f1_numeric.notna() & f2_numeric.notna() & (f1_numeric < f2_numeric)
@@ -119,8 +123,8 @@ class DataProcessor:
 
         # 2. 결과 데이터프레임 초기화
         final_df = pd.DataFrame()
-        final_df['F1'] = f1_numeric[valid_idx]
-        final_df['F2'] = f2_numeric[valid_idx]
+        final_df["F1"] = f1_numeric[valid_idx]
+        final_df["F2"] = f2_numeric[valid_idx]
 
         # 3. F3 및 Label 탐색
         remaining_cols = range(2, len(df.columns))
@@ -131,29 +135,29 @@ class DataProcessor:
             col_data = df.iloc[:, i]
 
             # 숫자형 데이터 검증
-            numeric_data = pd.to_numeric(col_data, errors='coerce')
+            numeric_data = pd.to_numeric(col_data, errors="coerce")
             is_numeric = numeric_data.notna().all()
 
             if is_numeric and not found_f3:
                 # 음향 데이터의 특성을 반영하여 100Hz 초과 값 존재 여부로 실제 F3 판단
                 if (numeric_data > 100).any():
-                    final_df['F3'] = numeric_data
+                    final_df["F3"] = numeric_data
                     found_f3 = True
 
             elif not found_label:
                 # 라벨 패턴 정규식 매칭 (/Label/ 형식)
                 str_data = col_data.astype(str)
-                if str_data.str.contains(r'/.+/').any():
-                    extracted = str_data.str.extract(r'/([^/]+)/')[0]
-                    final_df['Label'] = extracted.str.strip()
+                if str_data.str.contains(r"/.+/").any():
+                    extracted = str_data.str.extract(r"/([^/]+)/")[0]
+                    final_df["Label"] = extracted.str.strip()
                     found_label = True
 
         # 라벨 열이 발견되지 않은 경우 기본값 할당
-        if 'Label' not in final_df.columns:
-            final_df['Label'] = 'Unknown'
+        if "Label" not in final_df.columns:
+            final_df["Label"] = "Unknown"
 
         # 라벨이 누락된 행 제거
-        final_df.dropna(subset=['Label'], inplace=True)
+        final_df.dropna(subset=["Label"], inplace=True)
 
         # ------------------------------------------------------------------
         # F1>0, F1<F2, (F3 존재 시) F2<F3 및 F3>0 조건을 만족하지 않는 행 제거
@@ -161,22 +165,19 @@ class DataProcessor:
         # ------------------------------------------------------------------
         drop_report = None
         if not final_df.empty:
-            if 'F3' in final_df.columns:
+            if "F3" in final_df.columns:
                 cond = (
-                    (final_df['F1'] > 0) &
-                    (final_df['F2'] > final_df['F1']) &
-                    (final_df['F3'] > final_df['F2']) &
-                    (final_df['F3'] > 0)
+                    (final_df["F1"] > 0)
+                    & (final_df["F2"] > final_df["F1"])
+                    & (final_df["F3"] > final_df["F2"])
+                    & (final_df["F3"] > 0)
                 )
             else:
-                cond = (
-                    (final_df['F1'] > 0) &
-                    (final_df['F2'] > final_df['F1'])
-                )
+                cond = (final_df["F1"] > 0) & (final_df["F2"] > final_df["F1"])
             invalid_rows = final_df[~cond]
             if not invalid_rows.empty:
                 # 라벨별 누락 개수 집계
-                drop_report = invalid_rows['Label'].value_counts().to_dict()
+                drop_report = invalid_rows["Label"].value_counts().to_dict()
             final_df = final_df[cond]
 
         return final_df, None, drop_report

@@ -3,6 +3,7 @@
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
@@ -55,12 +56,14 @@ class TestScaleConversion(unittest.TestCase):
 
 class TestNormalization(unittest.TestCase):
     def setUp(self):
-        self.sample_df = pd.DataFrame({
-            "F1": [300, 500, 700],
-            "F2": [2000, 1800, 1200],
-            "F3": [2500, 2400, 2300],
-            "Label": ["i", "e", "a"]
-        })
+        self.sample_df = pd.DataFrame(
+            {
+                "F1": [300, 500, 700],
+                "F2": [2000, 1800, 1200],
+                "F3": [2500, 2400, 2300],
+                "Label": ["i", "e", "a"],
+            }
+        )
 
     def test_lobanov(self):
         out = lobanov_normalization(self.sample_df)

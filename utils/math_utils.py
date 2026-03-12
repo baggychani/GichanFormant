@@ -47,6 +47,7 @@ def calc_f2_prime(
 # 정규화 알고리즘 (Normalization Methods)
 # ---------------------------------------------------------
 
+
 def lobanov_normalization(df):
     """
     [로바노프 정규화 (Lobanov)]
@@ -54,10 +55,14 @@ def lobanov_normalization(df):
     - 원본 문헌: Lobanov, B.M. (1971). Classification of Russian vowels spoken by different speakers. JASA 49(2), 606-608. [cite: 177]
     """
     df_norm = df.copy()
-    for col in ['F1', 'F2', 'F3']:
+    for col in ["F1", "F2", "F3"]:
         if col in df_norm.columns:
             mu, sigma = df_norm[col].mean(), df_norm[col].std()
-            if pd.isna(sigma) or sigma is None or (hasattr(sigma, '__float__') and sigma == 0):
+            if (
+                pd.isna(sigma)
+                or sigma is None
+                or (hasattr(sigma, "__float__") and sigma == 0)
+            ):
                 df_norm[col] = 0.0
             else:
                 df_norm[col] = (df_norm[col] - mu) / sigma
@@ -72,14 +77,14 @@ def gerstman_normalization(df):
     - 원본 문헌: Gerstman, L. (1968). Classification of self-normalized vowels. IEEE Transactions of Audio Electroacoustics AU-16, 78-80. [cite: 173]
     """
     df_norm = df.copy()
-    for col in ['F1', 'F2', 'F3']:
+    for col in ["F1", "F2", "F3"]:
         if col in df_norm.columns:
             f_min, f_max = df_norm[col].min(), df_norm[col].max()
             if pd.isna(f_min) or pd.isna(f_max):
                 df_norm[col] = 0.0
             else:
                 denom = f_max - f_min
-                if denom is None or (hasattr(denom, '__float__') and denom == 0):
+                if denom is None or (hasattr(denom, "__float__") and denom == 0):
                     df_norm[col] = 0.0
                 else:
                     df_norm[col] = 999 * (df_norm[col] - f_min) / denom
@@ -87,7 +92,7 @@ def gerstman_normalization(df):
     return df_norm
 
 
-def watt_fabricius_normalization(df, variant='2m'):
+def watt_fabricius_normalization(df, variant="2m"):
     """
     [와트 & 파브리시우스 정규화 변형 (2mW&F)]
     - 설명: 화자의 모음 공간 중심점(centroid)을 기준으로 값을 표현하는 방식입니다[cite: 74]. 모음 공간을 삼각형으로 간주하며, F1과 F2의 최솟값 및 최댓값을 나타내는 지점들에 꼭짓점을 둡니다[cite: 75]. 2mW&F 변형 모델은 가상의 [u'] 지점을 구성할 때, 포인트 모음들의 평균값들 중 최솟값(lowest mean F1, F2 value of the point vowels)을 사용하도록 설정하여 더욱 현실적인 [u'] 배치를 제공합니다[cite: 85, 86].
@@ -95,20 +100,20 @@ def watt_fabricius_normalization(df, variant='2m'):
     """
     df_norm = df.copy()
     try:
-        vi = df['Vowel'] == 'i'
-        va = df['Vowel'] == 'a'
+        vi = df["Vowel"] == "i"
+        va = df["Vowel"] == "a"
         if not vi.any() or not va.any():
             return df_norm
 
-        i_f1, i_f2 = df.loc[vi, 'F1'].mean(), df.loc[vi, 'F2'].mean()
-        a_f1, a_f2 = df.loc[va, 'F1'].mean(), df.loc[va, 'F2'].mean()
+        i_f1, i_f2 = df.loc[vi, "F1"].mean(), df.loc[vi, "F2"].mean()
+        a_f1, a_f2 = df.loc[va, "F1"].mean(), df.loc[va, "F2"].mean()
 
         if np.isnan(i_f1) or np.isnan(i_f2) or np.isnan(a_f1) or np.isnan(a_f2):
             return df_norm
 
-        if variant == '2m':
-            mean_f1_by_vowel = df.groupby('Vowel')['F1'].mean()
-            mean_f2_by_vowel = df.groupby('Vowel')['F2'].mean()
+        if variant == "2m":
+            mean_f1_by_vowel = df.groupby("Vowel")["F1"].mean()
+            mean_f2_by_vowel = df.groupby("Vowel")["F2"].mean()
             u_p_f1 = mean_f1_by_vowel.min()
             u_p_f2 = mean_f2_by_vowel.min()
         else:
@@ -116,13 +121,24 @@ def watt_fabricius_normalization(df, variant='2m'):
             u_p_f2 = i_f2
 
         s_f1 = (i_f1 + a_f1 + u_p_f1) / 3
-        s_f2 = (i_f2 + u_p_f2) / 2 if variant == 'Im' else (i_f2 + a_f2 + u_p_f2) / 3
+        s_f2 = (i_f2 + u_p_f2) / 2 if variant == "Im" else (i_f2 + a_f2 + u_p_f2) / 3
 
-        if s_f1 is None or s_f1 == 0 or np.isnan(s_f1) or s_f2 is None or s_f2 == 0 or np.isnan(s_f2):
+        if (
+            s_f1 is None
+            or s_f1 == 0
+            or np.isnan(s_f1)
+            or s_f2 is None
+            or s_f2 == 0
+            or np.isnan(s_f2)
+        ):
             return df_norm
 
-        df_norm['F1'] = (df_norm['F1'] / s_f1).replace([np.inf, -np.inf], np.nan).fillna(0)
-        df_norm['F2'] = (df_norm['F2'] / s_f2).replace([np.inf, -np.inf], np.nan).fillna(0)
+        df_norm["F1"] = (
+            (df_norm["F1"] / s_f1).replace([np.inf, -np.inf], np.nan).fillna(0)
+        )
+        df_norm["F2"] = (
+            (df_norm["F2"] / s_f2).replace([np.inf, -np.inf], np.nan).fillna(0)
+        )
     except Exception:
         return df_norm
     return df_norm
@@ -136,7 +152,7 @@ def bigham_normalization(df):
     """
     df_norm = df.copy()
     try:
-        for col in ['F1', 'F2']:
+        for col in ["F1", "F2"]:
             if col not in df_norm.columns:
                 continue
             f_min, f_max = df_norm[col].min(), df_norm[col].max()
@@ -145,7 +161,9 @@ def bigham_normalization(df):
             s_f = (f_min + f_max) / 2
             if s_f is None or s_f == 0 or np.isnan(s_f):
                 continue
-            df_norm[col] = (df_norm[col] / s_f).replace([np.inf, -np.inf], np.nan).fillna(0)
+            df_norm[col] = (
+                (df_norm[col] / s_f).replace([np.inf, -np.inf], np.nan).fillna(0)
+            )
     except Exception:
         pass
     return df_norm
@@ -158,7 +176,7 @@ def nearey1_normalization(df):
     - 원본 문헌: Nearey, T.M. (1978). Phonetic Feature Systems for Vowels. PhD Dissertation, Indiana University. [cite: 177, 178]
     """
     df_norm = df.copy()
-    for col in ['F1', 'F2', 'F3']:
+    for col in ["F1", "F2", "F3"]:
         if col in df_norm.columns:
             # 0 이하의 값이 로그 연산에 들어가는 것을 막기 위한 방어 코드
             safe_vals = np.maximum(df_norm[col], 0.1)
@@ -175,33 +193,40 @@ def nearey1_normalization(df):
 # 이상치 제거 (Outlier Removal) - 마할라노비스 거리 기반
 # ---------------------------------------------------------
 
+
 def _ensure_xy_columns(df, plot_type):
     """plot_type에 따라 분석용 x, y 컬럼을 담은 DataFrame과 컬럼명 반환. (y, x) 순."""
-    out = df[['F1', 'F2']].copy()
-    out.columns = ['y_val', 'x_val']
-    if plot_type == 'f1_f2':
-        out['x_val'] = df['F2'].values
-    elif plot_type == 'f1_f3':
-        if 'F3' not in df.columns:
+    out = df[["F1", "F2"]].copy()
+    out.columns = ["y_val", "x_val"]
+    if plot_type == "f1_f2":
+        out["x_val"] = df["F2"].values
+    elif plot_type == "f1_f3":
+        if "F3" not in df.columns:
             return None, None, None
-        out['x_val'] = df['F3'].values
-    elif plot_type == 'f1_f2_prime':
-        f2p = calc_f2_prime(df['F1'].values, df['F2'].values,
-                            df['F3'].values if 'F3' in df.columns else df['F2'].values)
-        out['x_val'] = f2p
-    elif plot_type == 'f1_f2_minus_f1':
-        out['x_val'] = (df['F2'] - df['F1']).values
-    elif plot_type == 'f1_f2_prime_minus_f1':
-        f2p = calc_f2_prime(df['F1'].values, df['F2'].values,
-                            df['F3'].values if 'F3' in df.columns else df['F2'].values)
-        out['x_val'] = (f2p - df['F1'].values)
+        out["x_val"] = df["F3"].values
+    elif plot_type == "f1_f2_prime":
+        f2p = calc_f2_prime(
+            df["F1"].values,
+            df["F2"].values,
+            df["F3"].values if "F3" in df.columns else df["F2"].values,
+        )
+        out["x_val"] = f2p
+    elif plot_type == "f1_f2_minus_f1":
+        out["x_val"] = (df["F2"] - df["F1"]).values
+    elif plot_type == "f1_f2_prime_minus_f1":
+        f2p = calc_f2_prime(
+            df["F1"].values,
+            df["F2"].values,
+            df["F3"].values if "F3" in df.columns else df["F2"].values,
+        )
+        out["x_val"] = f2p - df["F1"].values
     else:
-        out['x_val'] = df['F2'].values
-    label_col = 'Label' if 'Label' in df.columns else 'label'
+        out["x_val"] = df["F2"].values
+    label_col = "Label" if "Label" in df.columns else "label"
     if label_col not in df.columns:
         return None, None, None
-    out['_label'] = df[label_col].values
-    return out, 'y_val', 'x_val'
+    out["_label"] = df[label_col].values
+    return out, "y_val", "x_val"
 
 
 def remove_outliers_mahalanobis(df, plot_type, sigma_option):
@@ -218,7 +243,7 @@ def remove_outliers_mahalanobis(df, plot_type, sigma_option):
         return df.copy(), 0, {}, {"labels_too_small": set(), "labels_tested": set()}
 
     # 자유도 2 카이제곱 임계값
-    if sigma_option == '1sigma':
+    if sigma_option == "1sigma":
         # 68.27% 포함 → 상위 31.73% 컷오프
         threshold = stats.chi2.ppf(0.6827, df=2)
     else:
@@ -230,7 +255,7 @@ def remove_outliers_mahalanobis(df, plot_type, sigma_option):
     labels_too_small = set()
     labels_tested = set()
 
-    for label, group in xy_df.groupby('_label'):
+    for label, group in xy_df.groupby("_label"):
         g = group[[y_col, x_col]].values
         n = len(g)
         if n < 5:

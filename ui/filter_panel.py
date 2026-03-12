@@ -3,9 +3,19 @@
 import os
 import platform
 import base64
-from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
-                             QPushButton, QButtonGroup, QScrollArea,
-                             QWidget, QFrame, QSizePolicy, QTabWidget)
+from PyQt6.QtWidgets import (
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QButtonGroup,
+    QScrollArea,
+    QWidget,
+    QFrame,
+    QSizePolicy,
+    QTabWidget,
+)
 from PyQt6.QtCore import Qt, QPoint, QEvent
 from PyQt6.QtGui import QFont, QIcon, QPixmap
 
@@ -27,7 +37,7 @@ class LiveVowelFilterPanel(QDialog):
         self.current_state = current_state.copy()
         for v in self.vowels:
             if v not in self.current_state:
-                self.current_state[v] = 'ON'
+                self.current_state[v] = "ON"
 
         self.button_groups = {}
 
@@ -39,7 +49,9 @@ class LiveVowelFilterPanel(QDialog):
 
         self.setWindowModality(Qt.WindowModality.NonModal)
 
-        self.ui_font_name = "Malgun Gothic" if platform.system() == "Windows" else "AppleGothic"
+        self.ui_font_name = (
+            "Malgun Gothic" if platform.system() == "Windows" else "AppleGothic"
+        )
 
         self._apply_pyqt6_icon()
         self._setup_ui()
@@ -145,7 +157,9 @@ class LiveVowelFilterPanel(QDialog):
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        )
 
         self.scroll_content = QWidget()
         self.scroll_content.setObjectName("ScrollContent")
@@ -184,10 +198,10 @@ class LiveVowelFilterPanel(QDialog):
                 btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
                 bg.addButton(btn, i + 1)
 
-            state = self.current_state.get(vowel, 'ON')
-            if state == 'ON':
+            state = self.current_state.get(vowel, "ON")
+            if state == "ON":
                 btn_on.setChecked(True)
-            elif state == 'OFF':
+            elif state == "OFF":
                 btn_off.setChecked(True)
             else:
                 btn_semi.setChecked(True)
@@ -240,11 +254,11 @@ class LiveVowelFilterPanel(QDialog):
         for vowel, bg in self.button_groups.items():
             checked_id = bg.checkedId()
             if checked_id == 1:
-                new_state[vowel] = 'ON'
+                new_state[vowel] = "ON"
             elif checked_id == 2:
-                new_state[vowel] = 'OFF'
+                new_state[vowel] = "OFF"
             else:
-                new_state[vowel] = 'SEMI'
+                new_state[vowel] = "SEMI"
 
         self.current_state = new_state
         if self.on_change_callback:
@@ -260,7 +274,17 @@ class MultiVowelFilterPanel(QDialog):
     두 파일의 모음 표시 상태를 독립적으로 관리합니다.
     """
 
-    def __init__(self, parent, file1_name, vowels1, state1, file2_name, vowels2, state2, on_change_callback):
+    def __init__(
+        self,
+        parent,
+        file1_name,
+        vowels1,
+        state1,
+        file2_name,
+        vowels2,
+        state2,
+        on_change_callback,
+    ):
         super().__init__(parent)
         self.file1_name = file1_name
         self.vowels1 = sorted(list(vowels1))
@@ -274,10 +298,10 @@ class MultiVowelFilterPanel(QDialog):
 
         for v in self.vowels1:
             if v not in self.state1:
-                self.state1[v] = 'ON'
+                self.state1[v] = "ON"
         for v in self.vowels2:
             if v not in self.state2:
-                self.state2[v] = 'ON'
+                self.state2[v] = "ON"
 
         # 1: 탭1 (파란색 데이터), 2: 탭2 (빨간색 데이터)
         self.button_groups = {1: {}, 2: {}}
@@ -288,7 +312,9 @@ class MultiVowelFilterPanel(QDialog):
         self.setMinimumHeight(450)
         self.setWindowModality(Qt.WindowModality.NonModal)
 
-        self.ui_font_name = "Malgun Gothic" if platform.system() == "Windows" else "AppleGothic"
+        self.ui_font_name = (
+            "Malgun Gothic" if platform.system() == "Windows" else "AppleGothic"
+        )
 
         self._apply_pyqt6_icon()
         self._setup_ui()
@@ -462,10 +488,10 @@ class MultiVowelFilterPanel(QDialog):
                 btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
                 bg.addButton(btn, i + 1)
 
-            state = current_state.get(vowel, 'ON')
-            if state == 'ON':
+            state = current_state.get(vowel, "ON")
+            if state == "ON":
                 btn_on.setChecked(True)
-            elif state == 'OFF':
+            elif state == "OFF":
                 btn_off.setChecked(True)
             else:
                 btn_semi.setChecked(True)
@@ -509,16 +535,22 @@ class MultiVowelFilterPanel(QDialog):
         new_state1 = {}
         for vowel, bg in self.button_groups[1].items():
             checked_id = bg.checkedId()
-            if checked_id == 1: new_state1[vowel] = 'ON'
-            elif checked_id == 2: new_state1[vowel] = 'OFF'
-            else: new_state1[vowel] = 'SEMI'
+            if checked_id == 1:
+                new_state1[vowel] = "ON"
+            elif checked_id == 2:
+                new_state1[vowel] = "OFF"
+            else:
+                new_state1[vowel] = "SEMI"
 
         new_state2 = {}
         for vowel, bg in self.button_groups[2].items():
             checked_id = bg.checkedId()
-            if checked_id == 1: new_state2[vowel] = 'ON'
-            elif checked_id == 2: new_state2[vowel] = 'OFF'
-            else: new_state2[vowel] = 'SEMI'
+            if checked_id == 1:
+                new_state2[vowel] = "ON"
+            elif checked_id == 2:
+                new_state2[vowel] = "OFF"
+            else:
+                new_state2[vowel] = "SEMI"
 
         self.state1 = new_state1
         self.state2 = new_state2

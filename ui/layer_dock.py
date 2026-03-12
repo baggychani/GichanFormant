@@ -7,9 +7,29 @@
 # - 순서 변경: _on_layer_reorder(dragged, target, after) 로 저장 후 set_vowels(ordered). 삽입 위치 미리 보기는 _set_drop_indicator_between / _hide_drop_indicator.
 
 from PyQt6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QScrollArea,
-    QFrame, QTabWidget, QButtonGroup, QSizePolicy, QApplication, QSplitter)
-from PyQt6.QtCore import Qt, pyqtSignal, QPointF, QEvent, QObject, QMimeData, QByteArray, QTimer
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QFrame,
+    QTabWidget,
+    QButtonGroup,
+    QSizePolicy,
+    QApplication,
+    QSplitter,
+)
+from PyQt6.QtCore import (
+    Qt,
+    pyqtSignal,
+    QPointF,
+    QEvent,
+    QObject,
+    QMimeData,
+    QByteArray,
+    QTimer,
+)
 from PyQt6.QtGui import QFont, QPainter, QPainterPath, QPen, QColor, QDrag, QPixmap
 
 import json
@@ -18,39 +38,59 @@ import config
 import app_logger
 from .design_panel import ColorPalette
 from .display_utils import strip_gichan_prefix
-from .icon_widgets import LinePreviewButton, MarkerShapeButton, LayerEyeButton, LayerLockButton
+from .icon_widgets import (
+    LinePreviewButton,
+    MarkerShapeButton,
+    LayerEyeButton,
+    LayerLockButton,
+)
 from . import layout_constants as lc
 
 
 # design_panel과 동일 매핑
-MARKER_IDS = {'o': 0, 's': 1, '^': 2, 'D': 3}
-MARKER_VALS = ['o', 's', '^', 'D']
-MARKER_LABELS = {'o': '동그라미', 's': '사각형', '^': '삼각형', 'D': '다이아몬드'}
+MARKER_IDS = {"o": 0, "s": 1, "^": 2, "D": 3}
+MARKER_VALS = ["o", "s", "^", "D"]
+MARKER_LABELS = {"o": "동그라미", "s": "사각형", "^": "삼각형", "D": "다이아몬드"}
 # 디자인 설정과 동일: 얇게=0.5, 보통=1.0, 두껍게=2.0
 THICK_VALS = [0.5, 1.0, 2.0]
-THICK_LABELS = {0.5: '얇게', 1.0: '보통', 2.0: '두껍게'}
+THICK_LABELS = {0.5: "얇게", 1.0: "보통", 2.0: "두껍게"}
 # 실선 '-', 긴 점선 '---'(긴 대시), 짧은 점선 '--'(중간 대시, 기존 긴 점선에 나오던 모양)
-STYLE_IDS = {'-': 0, '---': 1, '--': 2}
-STYLE_VALS = ['-', '---', '--']
-STYLE_LABELS = {'-': '실선', '---': '긴 점선', '--': '짧은 점선'}
+STYLE_IDS = {"-": 0, "---": 1, "--": 2}
+STYLE_VALS = ["-", "---", "--"]
+STYLE_LABELS = {"-": "실선", "---": "긴 점선", "--": "짧은 점선"}
 
 COLOR_NAMES = {
-    '#E64A19': 'Red', '#F57C00': 'Orange', '#FFEB3B': 'Yellow', '#388E3C': 'Green',
-    '#00BCD4': 'Cyan', '#1976D2': 'Blue', '#7B1FA2': 'Purple', '#E91E63': 'Pink',
-    '#000000': 'Black', '#606060': 'Dark Gray', '#AAAAAA': 'Light Gray',
-    '#795548': 'Brown', '#009688': 'Teal', '#FF9800': 'Amber',
-    'transparent': 'Transparent', 'custom': 'Custom Color'
+    "#E64A19": "Red",
+    "#F57C00": "Orange",
+    "#FFEB3B": "Yellow",
+    "#388E3C": "Green",
+    "#00BCD4": "Cyan",
+    "#1976D2": "Blue",
+    "#7B1FA2": "Purple",
+    "#E91E63": "Pink",
+    "#000000": "Black",
+    "#606060": "Dark Gray",
+    "#AAAAAA": "Light Gray",
+    "#795548": "Brown",
+    "#009688": "Teal",
+    "#FF9800": "Amber",
+    "transparent": "Transparent",
+    "custom": "Custom Color",
 }
 
 
 class _RowClickForwarder(QObject):
     """행의 이름 열 등 빈 영역 클릭 시 선택 토글으로 전달."""
+
     def __init__(self, callback, parent=None):
         super().__init__(parent)
         self._callback = callback
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
+        if (
+            event.type() == QEvent.Type.MouseButtonPress
+            and event.button() == Qt.MouseButton.LeftButton
+        ):
             if self._callback:
                 self._callback()
         return False
@@ -62,6 +102,7 @@ _LAYER_ROW_MIME_TYPE = "application/x-gichan-layer-vowel"
 
 class _LayerRowFrame(QFrame):
     """레이어 한 행용 프레임. 드래그로 순서 변경 가능."""
+
     def __init__(self, dock, vowel, parent=None):
         super().__init__(parent)
         self._dock = dock
@@ -77,10 +118,12 @@ class _LayerRowFrame(QFrame):
     def _build_drag_payload(self):
         dock = self._dock
         if self._vowel in dock._selected_vowels and len(dock._selected_vowels) > 1:
-            ordered = dock._get_ordered_vowels_for_display(list(dock._layer_rows.keys()))
+            ordered = dock._get_ordered_vowels_for_display(
+                list(dock._layer_rows.keys())
+            )
             drag_list = sorted(dock._selected_vowels, key=lambda v: ordered.index(v))
-            return json.dumps(drag_list).encode('utf-8')
-        return self._vowel.encode('utf-8')
+            return json.dumps(drag_list).encode("utf-8")
+        return self._vowel.encode("utf-8")
 
     def _start_drag(self):
         self._drag_pending = False
@@ -99,10 +142,18 @@ class _LayerRowFrame(QFrame):
         self._dock._hide_drop_indicator()
 
     def eventFilter(self, obj, event):
-        if event.type() == QEvent.Type.MouseButtonPress and event.button() == Qt.MouseButton.LeftButton:
+        if (
+            event.type() == QEvent.Type.MouseButtonPress
+            and event.button() == Qt.MouseButton.LeftButton
+        ):
             self._drag_start_pos_global = event.globalPosition().toPoint()
-            self._drag_start_pos_local = self.mapFromGlobal(event.globalPosition().toPoint())
-        elif event.type() == QEvent.Type.MouseMove and self._drag_start_pos_global is not None:
+            self._drag_start_pos_local = self.mapFromGlobal(
+                event.globalPosition().toPoint()
+            )
+        elif (
+            event.type() == QEvent.Type.MouseMove
+            and self._drag_start_pos_global is not None
+        ):
             if event.buttons() & Qt.MouseButton.LeftButton:
                 current_pos = event.globalPosition().toPoint()
                 if (current_pos - self._drag_start_pos_global).manhattanLength() >= 8:
@@ -123,7 +174,9 @@ class _LayerRowFrame(QFrame):
         if not (event.buttons() & Qt.MouseButton.LeftButton):
             super().mouseMoveEvent(event)
             return
-        if (event.globalPosition().toPoint() - self._drag_start_pos_global).manhattanLength() >= 8:
+        if (
+            event.globalPosition().toPoint() - self._drag_start_pos_global
+        ).manhattanLength() >= 8:
             self._drag_start_pos_global = None
             self._start_drag()
         else:
@@ -132,6 +185,7 @@ class _LayerRowFrame(QFrame):
 
 class _LayerListDropArea(QWidget):
     """레이어 목록 전체 영역에서 드롭 수락. 파란 선을 레이아웃 변형 없이 위에 덧그립니다."""
+
     def __init__(self, dock, parent=None):
         super().__init__(parent)
         self._dock = dock
@@ -140,7 +194,7 @@ class _LayerListDropArea(QWidget):
 
     def paintEvent(self, event):
         super().paintEvent(event)
-        if getattr(self._dock, '_drop_target', None) is not None:
+        if getattr(self._dock, "_drop_target", None) is not None:
             vowel, after = self._dock._drop_target
             row = self._dock._layer_rows.get(vowel)
             if row:
@@ -174,8 +228,8 @@ class _LayerListDropArea(QWidget):
             self._dock._hide_drop_indicator()
             return
         try:
-            raw = bytes(data).decode('utf-8')
-            dragged_list = json.loads(raw) if raw.startswith('[') else [raw]
+            raw = bytes(data).decode("utf-8")
+            dragged_list = json.loads(raw) if raw.startswith("[") else [raw]
         except Exception:
             self._dock._hide_drop_indicator()
             return
@@ -193,7 +247,7 @@ class _LayerListDropArea(QWidget):
 
 
 def _format_color_display(color_hex):
-    if not color_hex or color_hex == 'transparent':
+    if not color_hex or color_hex == "transparent":
         return "Transparent"
     key = color_hex if color_hex in COLOR_NAMES else color_hex.upper()
     name = COLOR_NAMES.get(key, "Custom Color")
@@ -205,14 +259,18 @@ def _format_color_display(color_hex):
 def _create_visual_button_group(parent, options, default_idx):
     group = QButtonGroup(parent)
     frame = QFrame()
-    frame.setStyleSheet("QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }")
+    frame.setStyleSheet(
+        "QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }"
+    )
     row_layout = QHBoxLayout(frame)
     row_layout.setContentsMargins(2, 2, 2, 2)
     row_layout.setSpacing(0)
     for i, opt in enumerate(options):
         w, s, r, tooltip = opt[:4]
         dash = opt[4] if len(opt) > 4 else None
-        btn = LinePreviewButton(line_width=w, line_style=s, radius_css=r, tooltip=tooltip, dash_pattern=dash)
+        btn = LinePreviewButton(
+            line_width=w, line_style=s, radius_css=r, tooltip=tooltip, dash_pattern=dash
+        )
         group.addButton(btn, i)
         row_layout.addWidget(btn)
     group.button(default_idx).setChecked(True)
@@ -222,11 +280,24 @@ def _create_visual_button_group(parent, options, default_idx):
 class LayerDockWidget(QWidget):
     filter_state_changed = pyqtSignal(dict)
     overrides_changed = pyqtSignal(dict)
-    compare_switch_requested = pyqtSignal(int)  # compare 모드에서 파일 A(0)/B(1) 전환 요청
-    splitter_sizes_changed = pyqtSignal(list)   # 다중플롯에서 두 도크 스플리터 비율 공유용
+    compare_switch_requested = pyqtSignal(
+        int
+    )  # compare 모드에서 파일 A(0)/B(1) 전환 요청
+    splitter_sizes_changed = pyqtSignal(
+        list
+    )  # 다중플롯에서 두 도크 스플리터 비율 공유용
     order_changed = pyqtSignal(list)
 
-    def __init__(self, parent_popup, ui_font_name="Malgun Gothic", state_key=None, compare_mode=False, file_a_name='', file_b_name='', get_default_design=None):
+    def __init__(
+        self,
+        parent_popup,
+        ui_font_name="Malgun Gothic",
+        state_key=None,
+        compare_mode=False,
+        file_a_name="",
+        file_b_name="",
+        get_default_design=None,
+    ):
         """state_key: None=단일 플롯, 'blue'/'red'=compare_plot 쪽 탭별 상태. compare_mode 시 레이어 탭 내에 파일 선택 행 표시.
         get_default_design: compare_plot용. None이면 popup.design_settings 사용, callable이면 호출해 해당 시리즈(Blue/Red) 기본값 사용."""
         super().__init__(parent_popup)
@@ -267,7 +338,9 @@ class LayerDockWidget(QWidget):
         color_layout = QVBoxLayout()
         color_layout.setSpacing(6)
         color_layout.addWidget(QLabel("라벨 텍스트 색상:", font=font_normal))
-        self.lbl_color_picker = ColorPalette(default_color='#FF0000', allow_transparent=True, parent=self)
+        self.lbl_color_picker = ColorPalette(
+            default_color="#FF0000", allow_transparent=True, parent=self
+        )
         color_layout.addWidget(self.lbl_color_picker)
         top_layout.addLayout(color_layout)
         centroid_layout = QHBoxLayout()
@@ -277,7 +350,9 @@ class LayerDockWidget(QWidget):
         centroid_layout.addWidget(lbl_centroid)
         centroid_layout.addStretch()
         self.group_centroid_marker = QButtonGroup(self)
-        for i, (mk, tip) in enumerate([('o', "동그라미"), ('s', "사각형"), ('^', "삼각형"), ('D', "다이아몬드")]):
+        for i, (mk, tip) in enumerate(
+            [("o", "동그라미"), ("s", "사각형"), ("^", "삼각형"), ("D", "다이아몬드")]
+        ):
             btn = MarkerShapeButton(mk, tooltip=tip)
             self.group_centroid_marker.addButton(btn, i)
             centroid_layout.addWidget(btn)
@@ -290,13 +365,17 @@ class LayerDockWidget(QWidget):
         top_layout.addWidget(line1)
 
         top_layout.addWidget(QLabel("신뢰 타원", font=font_bold))
-        thicks = [(1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
-                  (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
-                  (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게")]
+        thicks = [
+            (1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
+            (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
+            (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게"),
+        ]
         thick_frame, self.group_ell_thick = _create_visual_button_group(self, thicks, 1)
-        styles = [(2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
-                  (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
-                  (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선")]
+        styles = [
+            (2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
+            (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
+            (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선"),
+        ]
         style_frame, self.group_ell_style = _create_visual_button_group(self, styles, 2)
         ell_type_row = QVBoxLayout()
         ell_type_row.setSpacing(4)
@@ -307,13 +386,17 @@ class LayerDockWidget(QWidget):
         ell_line_color_layout = QVBoxLayout()
         ell_line_color_layout.setSpacing(6)
         ell_line_color_layout.addWidget(QLabel("타원 선 색상:", font=font_normal))
-        self.ell_color_picker = ColorPalette(default_color='#606060', allow_transparent=True, parent=self)
+        self.ell_color_picker = ColorPalette(
+            default_color="#606060", allow_transparent=True, parent=self
+        )
         ell_line_color_layout.addWidget(self.ell_color_picker)
         top_layout.addLayout(ell_line_color_layout)
         ell_fill_layout = QVBoxLayout()
         ell_fill_layout.setSpacing(6)
         ell_fill_layout.addWidget(QLabel("타원 내부 색상:", font=font_normal))
-        self.ell_fill_picker = ColorPalette(default_color='transparent', allow_transparent=True, parent=self)
+        self.ell_fill_picker = ColorPalette(
+            default_color="transparent", allow_transparent=True, parent=self
+        )
         ell_fill_layout.addWidget(self.ell_fill_picker)
         top_layout.addLayout(ell_fill_layout)
 
@@ -323,7 +406,8 @@ class LayerDockWidget(QWidget):
 
         self.tab_widget = QTabWidget()
         self.tab_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.tab_widget.setStyleSheet("""
+        self.tab_widget.setStyleSheet(
+            """
             QTabWidget::pane {
                 border-top: 1px solid #E4E7ED;
                 background: #FFFFFF;
@@ -347,18 +431,22 @@ class LayerDockWidget(QWidget):
                 background: #EBEEF5;
                 color: #409EFF;
             }
-        """ % config.TAB_BAR_MIN_WIDTH_PX)
+        """
+            % config.TAB_BAR_MIN_WIDTH_PX
+        )
         layer_tab = QWidget()
         data_layout = QVBoxLayout(layer_tab)
         data_layout.setContentsMargins(0, 0, 0, 0)
-        
+
         tab_underline = QFrame()
         tab_underline.setFrameShape(QFrame.Shape.HLine)
         tab_underline.setFixedHeight(1)
-        tab_underline.setStyleSheet("background-color: #E4E7ED; margin: 0; border: none;")
+        tab_underline.setStyleSheet(
+            "background-color: #E4E7ED; margin: 0; border: none;"
+        )
         data_layout.addWidget(tab_underline)
         data_layout.setSpacing(0)
-        
+
         # compare 모드: 레이어 목록(전체 눈/반투명 행) 바로 위에 파일 선택 행
         self._compare_file_switch_row = None
         self._compare_file_btn_a = None
@@ -366,15 +454,19 @@ class LayerDockWidget(QWidget):
         self._compare_file_group = None
         if self._compare_mode:
             _max = 20  # 레이어 목록 위 파일 선택 버튼용 글자 수 제한
+
             def _trunc(s):
                 return s if len(s) <= _max else s[: _max - 3] + "..."
+
             name_a = os.path.splitext(self._file_a_name)[0]
             name_b = os.path.splitext(self._file_b_name)[0]
             btn_label_a = _trunc(strip_gichan_prefix(name_a))
             btn_label_b = _trunc(strip_gichan_prefix(name_b))
             self._compare_file_switch_row = QFrame()
             self._compare_file_switch_row.setFixedHeight(32)
-            self._compare_file_switch_row.setStyleSheet("background-color: #F5F7FA; border-bottom: 1px solid #EBEEF5;")
+            self._compare_file_switch_row.setStyleSheet(
+                "background-color: #F5F7FA; border-bottom: 1px solid #EBEEF5;"
+            )
             switch_layout = QHBoxLayout(self._compare_file_switch_row)
             switch_layout.setContentsMargins(0, 0, 0, 0)
             switch_layout.setSpacing(0)
@@ -390,7 +482,9 @@ class LayerDockWidget(QWidget):
                 btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
                 btn.setFixedHeight(32)
-                btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+                btn.setSizePolicy(
+                    QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
+                )
                 btn.setStyleSheet(
                     "QPushButton { background: transparent; border: none; color: #606266; font-size: 11px; padding: 4px 2px; }"
                     "QPushButton:checked { background: #E6F0F9; color: #409EFF; font-weight: bold; }"
@@ -404,14 +498,21 @@ class LayerDockWidget(QWidget):
             switch_layout.addWidget(sep_v)
             switch_layout.addWidget(self._compare_file_btn_b, 1)
             self._compare_file_group.buttonClicked.connect(
-                lambda b: self.compare_switch_requested.emit(self._compare_file_group.id(b)))
+                lambda b: self.compare_switch_requested.emit(
+                    self._compare_file_group.id(b)
+                )
+            )
             data_layout.addWidget(self._compare_file_switch_row)
-        
+
         self.layer_scroll = QScrollArea()
         self.layer_scroll.setWidgetResizable(True)
-        self.layer_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.layer_scroll.setStyleSheet("QScrollArea { border: none; background: #FFFFFF; }")
-        
+        self.layer_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self.layer_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: #FFFFFF; }"
+        )
+
         self._layer_list_widget = _LayerListDropArea(self)
         self._layer_list_layout = QVBoxLayout(self._layer_list_widget)
         self._layer_list_layout.setContentsMargins(0, 0, 0, 0)
@@ -431,14 +532,20 @@ class LayerDockWidget(QWidget):
         draw_tab_underline = QFrame()
         draw_tab_underline.setFrameShape(QFrame.Shape.HLine)
         draw_tab_underline.setFixedHeight(1)
-        draw_tab_underline.setStyleSheet("background-color: #E4E7ED; margin: 0; border: none;")
+        draw_tab_underline.setStyleSheet(
+            "background-color: #E4E7ED; margin: 0; border: none;"
+        )
         draw_tab_layout.addWidget(draw_tab_underline)
         self._draw_global_row = self._build_draw_global_row()
         draw_tab_layout.addWidget(self._draw_global_row)
         self._draw_layer_scroll = QScrollArea()
         self._draw_layer_scroll.setWidgetResizable(True)
-        self._draw_layer_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self._draw_layer_scroll.setStyleSheet("QScrollArea { border: none; background: #FFFFFF; }")
+        self._draw_layer_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
+        self._draw_layer_scroll.setStyleSheet(
+            "QScrollArea { border: none; background: #FFFFFF; }"
+        )
         draw_list_placeholder = QWidget()
         draw_list_placeholder.setStyleSheet("background: #FFFFFF;")
         draw_tab_layout.addWidget(self._draw_layer_scroll, 1)
@@ -489,11 +596,12 @@ class LayerDockWidget(QWidget):
         self._splitter = QSplitter(Qt.Orientation.Vertical)
         self._splitter.addWidget(top_scroll)
         self._splitter.addWidget(lower_widget)
-        saved = getattr(self.popup, 'layer_dock_splitter_sizes', None)
+        saved = getattr(self.popup, "layer_dock_splitter_sizes", None)
         if saved and len(saved) == 2 and all(s > 0 for s in saved):
             self._splitter.setSizes(list(saved))
         else:
             self._splitter.setSizes([lc.DOCK_WIDTH_PX, 400])
+
         def _on_splitter_moved():
             self.splitter_sizes_changed.emit(self._splitter.sizes())
 
@@ -516,40 +624,66 @@ class LayerDockWidget(QWidget):
                 self._set_layer_overrides(overrides)
                 self.overrides_changed.emit(overrides)
                 self._rebuild_effects()
+
             return apply
 
         self.lbl_color_picker.color_changed.connect(
-            make_apply('lbl_color', lambda: self.lbl_color_picker.current_color))
+            make_apply("lbl_color", lambda: self.lbl_color_picker.current_color)
+        )
         self.ell_color_picker.color_changed.connect(
-            make_apply('ell_color', lambda: self.ell_color_picker.current_color if self.ell_color_picker.current_color != 'transparent' else None))
+            make_apply(
+                "ell_color",
+                lambda: (
+                    self.ell_color_picker.current_color
+                    if self.ell_color_picker.current_color != "transparent"
+                    else None
+                ),
+            )
+        )
         self.ell_fill_picker.color_changed.connect(
-            make_apply('ell_fill_color', lambda: self.ell_fill_picker.current_color if self.ell_fill_picker.current_color != 'transparent' else None))
+            make_apply(
+                "ell_fill_color",
+                lambda: (
+                    self.ell_fill_picker.current_color
+                    if self.ell_fill_picker.current_color != "transparent"
+                    else None
+                ),
+            )
+        )
 
         def on_centroid_toggled():
-            if self._updating: return
+            if self._updating:
+                return
             bid = self.group_centroid_marker.checkedId()
-            if bid >= 0: make_apply('centroid_marker', lambda: MARKER_VALS[bid])()
+            if bid >= 0:
+                make_apply("centroid_marker", lambda: MARKER_VALS[bid])()
+
         def on_ell_thick_toggled():
-            if self._updating: return
+            if self._updating:
+                return
             bid = self.group_ell_thick.checkedId()
-            if bid >= 0: make_apply('ell_thick', lambda: THICK_VALS[bid])()
+            if bid >= 0:
+                make_apply("ell_thick", lambda: THICK_VALS[bid])()
+
         def on_ell_style_toggled():
-            if self._updating: return
+            if self._updating:
+                return
             bid = self.group_ell_style.checkedId()
-            if bid >= 0: make_apply('ell_style', lambda: STYLE_VALS[bid])()
-            
+            if bid >= 0:
+                make_apply("ell_style", lambda: STYLE_VALS[bid])()
+
         self.group_centroid_marker.buttonToggled.connect(on_centroid_toggled)
         self.group_ell_thick.buttonToggled.connect(on_ell_thick_toggled)
         self.group_ell_style.buttonToggled.connect(on_ell_style_toggled)
 
     def _get_current_filter_state(self):
         if self._state_key:
-            return getattr(self.popup, 'vowel_filter_state_' + self._state_key, {})
-        return getattr(self.popup, 'vowel_filter_state', {})
+            return getattr(self.popup, "vowel_filter_state_" + self._state_key, {})
+        return getattr(self.popup, "vowel_filter_state", {})
 
     def _set_filter_state(self, state):
         if self._state_key:
-            setattr(self.popup, 'vowel_filter_state_' + self._state_key, state)
+            setattr(self.popup, "vowel_filter_state_" + self._state_key, state)
         else:
             self.popup.vowel_filter_state = state
         self.filter_state_changed.emit(state)
@@ -557,12 +691,12 @@ class LayerDockWidget(QWidget):
 
     def _get_layer_overrides(self):
         if self._state_key:
-            return getattr(self.popup, 'layer_design_overrides_' + self._state_key, {})
-        return getattr(self.popup, 'layer_design_overrides', {})
+            return getattr(self.popup, "layer_design_overrides_" + self._state_key, {})
+        return getattr(self.popup, "layer_design_overrides", {})
 
     def _set_layer_overrides(self, overrides):
         if self._state_key:
-            setattr(self.popup, 'layer_design_overrides_' + self._state_key, overrides)
+            setattr(self.popup, "layer_design_overrides_" + self._state_key, overrides)
         else:
             self.popup.layer_design_overrides = overrides
 
@@ -575,14 +709,18 @@ class LayerDockWidget(QWidget):
         row = QFrame()
         row.setFixedHeight(26)
         # 아래쪽 1px 경계선만 사용해 다른 구분선과 동일한 두께로 보이도록 함
-        row.setStyleSheet("background-color: #F5F7FA; border-top: none; border-left: none; border-right: none; border-bottom: 1px solid #EBEEF5;")
+        row.setStyleSheet(
+            "background-color: #F5F7FA; border-top: none; border-left: none; border-right: none; border-bottom: 1px solid #EBEEF5;"
+        )
         main_h = QHBoxLayout(row)
         main_h.setContentsMargins(0, 0, 0, 0)
         main_h.setSpacing(0)
 
         col_eye = QFrame()
         col_eye.setFixedSize(32, 26)
-        col_eye.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED;")
+        col_eye.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED;"
+        )
         eye_layout = QVBoxLayout(col_eye)
         eye_layout.setContentsMargins(0, 0, 0, 0)
         eye_btn = LayerEyeButton()
@@ -592,7 +730,9 @@ class LayerDockWidget(QWidget):
 
         col_semi = QFrame()
         col_semi.setFixedSize(54, 26)
-        col_semi.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED;")
+        col_semi.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED;"
+        )
         semi_layout = QVBoxLayout(col_semi)
         semi_layout.setContentsMargins(0, 0, 0, 0)
         semi_btn = QPushButton("반투명")
@@ -614,19 +754,19 @@ class LayerDockWidget(QWidget):
             vowels = list(self._layer_rows.keys())
             if not vowels:
                 return
-            all_off = all(st.get(v) == 'OFF' for v in vowels)
+            all_off = all(st.get(v) == "OFF" for v in vowels)
             self._updating = True
             try:
                 if all_off:
                     for v in vowels:
-                        st[v] = 'ON'
+                        st[v] = "ON"
                 else:
                     for v in vowels:
-                        st[v] = 'OFF'
+                        st[v] = "OFF"
                 self._set_filter_state(st)
                 for v in vowels:
                     self._layer_rows[v].eye_btn.blockSignals(True)
-                    self._layer_rows[v].eye_btn.setChecked(st.get(v) != 'OFF')
+                    self._layer_rows[v].eye_btn.setChecked(st.get(v) != "OFF")
                     self._layer_rows[v].eye_btn.blockSignals(False)
             finally:
                 self._updating = False
@@ -638,23 +778,23 @@ class LayerDockWidget(QWidget):
             if not vowels:
                 return
             all_semi = all(
-                self._layer_rows[v].semi_btn.isChecked() and st.get(v) != 'OFF'
+                self._layer_rows[v].semi_btn.isChecked() and st.get(v) != "OFF"
                 for v in vowels
             )
             self._updating = True
             try:
                 if all_semi:
                     for v in vowels:
-                        if st.get(v) != 'OFF':
-                            st[v] = 'ON'
+                        if st.get(v) != "OFF":
+                            st[v] = "ON"
                         self._layer_rows[v].semi_btn.blockSignals(True)
                         self._layer_rows[v].semi_btn.setChecked(False)
                         self._layer_rows[v].semi_btn.blockSignals(False)
                         self._semi_memory[v] = False
                 else:
                     for v in vowels:
-                        if st.get(v) != 'OFF':
-                            st[v] = 'SEMI'
+                        if st.get(v) != "OFF":
+                            st[v] = "SEMI"
                         self._layer_rows[v].semi_btn.blockSignals(True)
                         self._layer_rows[v].semi_btn.setChecked(True)
                         self._layer_rows[v].semi_btn.blockSignals(False)
@@ -674,14 +814,18 @@ class LayerDockWidget(QWidget):
         """그리기 탭용 일괄 눈/반투명 행. 레이어 탭과 동일한 외형, 목록 비어 있으면 no-op."""
         row = QFrame()
         row.setFixedHeight(26)
-        row.setStyleSheet("background-color: #F5F7FA; border-top: none; border-left: none; border-right: none; border-bottom: 1px solid #EBEEF5;")
+        row.setStyleSheet(
+            "background-color: #F5F7FA; border-top: none; border-left: none; border-right: none; border-bottom: 1px solid #EBEEF5;"
+        )
         main_h = QHBoxLayout(row)
         main_h.setContentsMargins(0, 0, 0, 0)
         main_h.setSpacing(0)
 
         col_eye = QFrame()
         col_eye.setFixedSize(32, 26)
-        col_eye.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED;")
+        col_eye.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED;"
+        )
         eye_layout = QVBoxLayout(col_eye)
         eye_layout.setContentsMargins(0, 0, 0, 0)
         eye_btn = LayerEyeButton()
@@ -692,7 +836,9 @@ class LayerDockWidget(QWidget):
 
         col_semi = QFrame()
         col_semi.setFixedSize(54, 26)
-        col_semi.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED;")
+        col_semi.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED;"
+        )
         semi_layout = QVBoxLayout(col_semi)
         semi_layout.setContentsMargins(0, 0, 0, 0)
         semi_btn = QPushButton("반투명")
@@ -710,12 +856,12 @@ class LayerDockWidget(QWidget):
         main_h.addStretch()
 
         def on_eye():
-            if getattr(self, '_draw_layer_rows', None):
+            if getattr(self, "_draw_layer_rows", None):
                 pass  # 추후 그리기 레이어 목록 연동
             pass
 
         def on_semi():
-            if getattr(self, '_draw_layer_rows', None):
+            if getattr(self, "_draw_layer_rows", None):
                 pass  # 추후 그리기 레이어 목록 연동
             pass
 
@@ -731,11 +877,10 @@ class LayerDockWidget(QWidget):
             return
         st = self._get_current_filter_state()
         vowels = list(self._layer_rows.keys())
-        any_visible = any(st.get(v) != 'OFF' for v in vowels)
-        all_semi = (
-            all(st.get(v) == 'SEMI' for v in vowels if st.get(v) != 'OFF')
-            and any(st.get(v) != 'OFF' for v in vowels)
-        )
+        any_visible = any(st.get(v) != "OFF" for v in vowels)
+        all_semi = all(
+            st.get(v) == "SEMI" for v in vowels if st.get(v) != "OFF"
+        ) and any(st.get(v) != "OFF" for v in vowels)
         self._global_row.eye_btn.blockSignals(True)
         self._global_row.semi_btn.blockSignals(True)
         self._global_row.eye_btn.setChecked(any_visible)
@@ -748,7 +893,7 @@ class LayerDockWidget(QWidget):
         compare_plot 이식 시에는 popup 대신 탭별 layer_order를 사용할 수 있도록 확장 가능.
         """
         vowels_set = set(vowels)
-        ordered = getattr(self.popup, 'layer_order', None) or []
+        ordered = getattr(self.popup, "layer_order", None) or []
         # 저장된 순서 중 현재 모음 집합에 포함되는 것만 유지
         stored = [v for v in ordered if v in vowels_set]
         if stored and set(stored) == vowels_set:
@@ -791,25 +936,31 @@ class LayerDockWidget(QWidget):
         ordered = self._get_ordered_vowels_for_display(list(self._layer_rows.keys()))
         if not dragged_set.issubset(set(ordered)) or drop_target_vowel not in ordered:
             return
-            
+
         new_order = [v for v in ordered if v not in dragged_set]
         if drop_target_vowel in dragged_set:
             target_pos = ordered.index(drop_target_vowel)
-            insert_idx = len([v for v in ordered[: target_pos + (1 if after else 0)] if v not in dragged_set])
+            insert_idx = len(
+                [
+                    v
+                    for v in ordered[: target_pos + (1 if after else 0)]
+                    if v not in dragged_set
+                ]
+            )
         else:
             target_idx = new_order.index(drop_target_vowel)
             insert_idx = target_idx + (1 if after else 0)
-            
+
         for v in dragged_list:
             new_order.insert(insert_idx, v)
             insert_idx += 1
-            
+
         self.popup.layer_order = list(new_order)
         self._hide_drop_indicator()
-        
+
         # 1. 화면 새로고침 (에러나던 유령 함수를 지우고 정상 함수 사용)
         self.set_vowels(new_order)
-        
+
         # 2. 이동한 레이어 파란색 선택 효과 확실하게 칠하기
         self._selected_vowels = set(dragged_list)
         for v, r in self._layer_rows.items():
@@ -817,14 +968,14 @@ class LayerDockWidget(QWidget):
             r.name_btn.setChecked(v in self._selected_vowels)
             r.style().unpolish(r)
             r.style().polish(r)
-            
+
         # 3. 하단 디자인 패널 동기화
         self._sync_design_controls_to_selection()
-        
+
         # 4. 다중 플롯 시그널 동기화 및 그래프 갱신
-        if hasattr(self, 'order_changed'):
+        if hasattr(self, "order_changed"):
             self.order_changed.emit(new_order)
-        if hasattr(self.popup, 'on_apply'):
+        if hasattr(self.popup, "on_apply"):
             self.popup.on_apply()
 
     def set_vowels(self, vowels):
@@ -848,7 +999,7 @@ class LayerDockWidget(QWidget):
         self._layer_list_layout.addWidget(self._global_row)
 
         for idx, v in enumerate(ordered_vowels):
-            row = self._build_layer_row(str(v), filter_state.get(v, 'ON'))
+            row = self._build_layer_row(str(v), filter_state.get(v, "ON"))
             row.setProperty("vowel", v)
             self._layer_list_layout.addWidget(row)
             self._layer_rows[v] = row
@@ -871,14 +1022,14 @@ class LayerDockWidget(QWidget):
 
     def set_splitter_sizes(self, sizes):
         """다중플롯에서 다른 도크와 스플리터 비율 동기화. sizes: [상단, 하단] 픽셀."""
-        if getattr(self, '_splitter', None) is not None and sizes and len(sizes) == 2:
+        if getattr(self, "_splitter", None) is not None and sizes and len(sizes) == 2:
             self._splitter.setSizes(list(sizes))
 
     def _build_layer_row(self, vowel, state):
         row = _LayerRowFrame(self, vowel)
         row.setProperty("layerRow", True)
         row.setProperty("vowel", vowel)
-        
+
         # 행 전체에 hover 및 선택 효과 적용 (밑줄은 행 사이 separator로만 처리)
         row.setStyleSheet("""
             QFrame[layerRow="true"] {
@@ -891,11 +1042,11 @@ class LayerDockWidget(QWidget):
                 background-color: #E6F0F9;
             }
         """)
-        
+
         row_vbox = QVBoxLayout(row)
         row_vbox.setContentsMargins(0, 0, 0, 0)
         row_vbox.setSpacing(0)
-        
+
         # 메인 가로 레이아웃 (테이블 구조: 여백과 간격을 0으로)
         main_h = QHBoxLayout()
         main_h.setContentsMargins(0, 0, 0, 0)
@@ -905,7 +1056,9 @@ class LayerDockWidget(QWidget):
         col_eye = QFrame()
         col_eye.setFixedSize(32, 32)
         # 오른쪽 1px 세로선으로 칸을 구분 (배경은 투명으로 두어 행 hover/선택 색이 그대로 비치도록 함)
-        col_eye.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;")
+        col_eye.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;"
+        )
         eye_layout = QVBoxLayout(col_eye)
         eye_layout.setContentsMargins(0, 0, 0, 0)
         eye_btn = LayerEyeButton()
@@ -914,7 +1067,9 @@ class LayerDockWidget(QWidget):
         # 2. 반투명 (Semi) 열
         col_semi = QFrame()
         col_semi.setFixedSize(54, 32)
-        col_semi.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;")
+        col_semi.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;"
+        )
         semi_layout = QVBoxLayout(col_semi)
         semi_layout.setContentsMargins(0, 0, 0, 0)
         semi_btn = QPushButton("반투명")
@@ -929,11 +1084,11 @@ class LayerDockWidget(QWidget):
 
         # 상태 연동 로직 (가장 중요한 독립성 보장 영역)
         was_semi = self._semi_memory.get(vowel, False)
-        if state == 'SEMI':
+        if state == "SEMI":
             was_semi = True
             self._semi_memory[vowel] = True
 
-        eye_btn.setChecked(state != 'OFF')
+        eye_btn.setChecked(state != "OFF")
         semi_btn.setChecked(was_semi)
 
         # 3. 레이어 이름 & 확장 (Name) 열
@@ -947,35 +1102,44 @@ class LayerDockWidget(QWidget):
         name_btn = QPushButton(vowel)
         name_btn.setFont(font_name)
         # 줄 전체에서 최대한 넓게 클릭 가능한 영역을 확보하기 위해 가로 방향으로 확장
-        name_btn.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        name_btn.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred
+        )
         name_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        name_btn.setStyleSheet("QPushButton { border: none; background: transparent; text-align: left; color: #303133; }")
-        
+        name_btn.setStyleSheet(
+            "QPushButton { border: none; background: transparent; text-align: left; color: #303133; }"
+        )
+
         expand_btn = QPushButton("▼")
         expand_btn.setFixedSize(22, 22)
         expand_btn.setCheckable(True)
         expand_btn.setChecked(True)
         expand_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        expand_btn.setStyleSheet("QPushButton { border: none; background: transparent; color: #909399; font-size: 10px; } QPushButton:hover { color: #409EFF; }")
-        
+        expand_btn.setStyleSheet(
+            "QPushButton { border: none; background: transparent; color: #909399; font-size: 10px; } QPushButton:hover { color: #409EFF; }"
+        )
+
         name_layout.addWidget(name_btn, 1)
         name_layout.addWidget(expand_btn)
 
         # 4. 자물쇠(잠금) 열 — 잠금 시 레이어 설정 초기화에서 제외
         col_lock = QFrame()
         col_lock.setFixedSize(32, 32)
-        col_lock.setStyleSheet("background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;")
+        col_lock.setStyleSheet(
+            "background: transparent; border-right: 1px solid #E4E7ED; border-bottom: none; border-top: none; border-left: none;"
+        )
         lock_layout = QVBoxLayout(col_lock)
         lock_layout.setContentsMargins(0, 0, 0, 0)
         lock_btn = LayerLockButton()
         lock_layout.addWidget(lock_btn)
 
         if self._state_key:
-            locked_attr = 'layer_locked_vowels_' + self._state_key
+            locked_attr = "layer_locked_vowels_" + self._state_key
             if not hasattr(self.popup, locked_attr):
                 setattr(self.popup, locked_attr, set())
             locked_set = getattr(self.popup, locked_attr)
             lock_btn.setChecked(vowel in locked_set)
+
             def on_lock_toggled(checked):
                 s = getattr(self.popup, locked_attr)
                 if checked:
@@ -983,19 +1147,25 @@ class LayerDockWidget(QWidget):
                 else:
                     s.discard(vowel)
         else:
-            idx = getattr(self.popup, 'current_idx', getattr(self.popup.controller, 'current_idx', 0))
-            by_file = getattr(self.popup, 'layer_locked_vowels_by_file', None)
+            idx = getattr(
+                self.popup,
+                "current_idx",
+                getattr(self.popup.controller, "current_idx", 0),
+            )
+            by_file = getattr(self.popup, "layer_locked_vowels_by_file", None)
             if by_file is None:
                 self.popup.layer_locked_vowels_by_file = {}
                 by_file = self.popup.layer_locked_vowels_by_file
             locked_set = by_file.setdefault(idx, set())
             lock_btn.setChecked(vowel in locked_set)
+
             def on_lock_toggled(checked):
                 s = by_file.setdefault(idx, set())
                 if checked:
                     s.add(vowel)
                 else:
                     s.discard(vowel)
+
         lock_btn.toggled.connect(on_lock_toggled)
 
         # 행에 각 열 합체
@@ -1028,9 +1198,9 @@ class LayerDockWidget(QWidget):
             st = self._get_current_filter_state()
             if checked:
                 # 눈이 켜질 때, 반투명 버튼이 눌려있었다면 SEMI, 아니면 ON 적용
-                st[vowel] = 'SEMI' if semi_btn.isChecked() else 'ON'
+                st[vowel] = "SEMI" if semi_btn.isChecked() else "ON"
             else:
-                st[vowel] = 'OFF'
+                st[vowel] = "OFF"
             self._set_filter_state(st)
 
         def on_semi_toggled(checked):
@@ -1038,7 +1208,7 @@ class LayerDockWidget(QWidget):
             # 눈이 켜져 있을 때만 즉시 상태를 반영 (눈이 꺼져있을 땐 버튼 UI만 눌리고 무시됨)
             if eye_btn.isChecked():
                 st = self._get_current_filter_state()
-                st[vowel] = 'SEMI' if checked else 'ON'
+                st[vowel] = "SEMI" if checked else "ON"
                 self._set_filter_state(st)
 
         def on_name_clicked():
@@ -1063,11 +1233,11 @@ class LayerDockWidget(QWidget):
         row.semi_btn = semi_btn
         row.name_btn = name_btn
         row.expand_btn = expand_btn
-        
+
         return row
 
     def _toggle_select_vowel(self, vowel, name_btn):
-        mod = getattr(self, '_last_modifier', None)
+        mod = getattr(self, "_last_modifier", None)
         if mod == Qt.KeyboardModifier.ControlModifier:
             if vowel in self._selected_vowels:
                 self._selected_vowels.discard(vowel)
@@ -1076,12 +1246,12 @@ class LayerDockWidget(QWidget):
         elif mod == Qt.KeyboardModifier.ShiftModifier:
             vowels = self._get_ordered_vowels_for_display(list(self._layer_rows.keys()))
             if vowel in vowels:
-                anchor = getattr(self, '_anchor_vowel', None) or vowel
+                anchor = getattr(self, "_anchor_vowel", None) or vowel
                 if anchor in vowels:
                     i1 = vowels.index(anchor)
                     i2 = vowels.index(vowel)
                     start, end = (i1, i2) if i1 <= i2 else (i2, i1)
-                    self._selected_vowels = set(vowels[start:end + 1])
+                    self._selected_vowels = set(vowels[start : end + 1])
         else:
             # 수정키 없이 클릭: 이미 이 모음만 선택된 상태면 선택 해제, 아니면 이 모음만 선택
             if self._selected_vowels == {vowel}:
@@ -1094,7 +1264,7 @@ class LayerDockWidget(QWidget):
 
         for v, r in self._layer_rows.items():
             r.setProperty("selected", v in self._selected_vowels)
-            if hasattr(r, 'name_btn'):
+            if hasattr(r, "name_btn"):
                 r.name_btn.setChecked(v in self._selected_vowels)
             r.style().unpolish(r)
             r.style().polish(r)
@@ -1113,7 +1283,7 @@ class LayerDockWidget(QWidget):
         self._selected_vowels = set()
         for r in self._layer_rows.values():
             r.setProperty("selected", False)
-            if hasattr(r, 'name_btn'):
+            if hasattr(r, "name_btn"):
                 r.name_btn.setChecked(False)
             r.style().unpolish(r)
             r.style().polish(r)
@@ -1128,47 +1298,76 @@ class LayerDockWidget(QWidget):
             if self._get_default_design is not None:
                 ds = self._get_default_design() or {}
             else:
-                ds = getattr(self.popup, 'design_settings', {}) or {}
+                ds = getattr(self.popup, "design_settings", {}) or {}
             if len(self._selected_vowels) == 1:
                 v = next(iter(self._selected_vowels))
                 o = overrides.get(v, {})
-                self.lbl_color_picker.set_color(o.get('lbl_color', ds.get('lbl_color', '#FF0000')))
-                idx = MARKER_IDS.get(o.get('centroid_marker', ds.get('centroid_marker', 'o')), 0)
+                self.lbl_color_picker.set_color(
+                    o.get("lbl_color", ds.get("lbl_color", "#FF0000"))
+                )
+                idx = MARKER_IDS.get(
+                    o.get("centroid_marker", ds.get("centroid_marker", "o")), 0
+                )
                 btn_c = self.group_centroid_marker.button(idx)
-                if btn_c: btn_c.setChecked(True)
-                thick_val = o.get('ell_thick') or ds.get('ell_thick', 2.0)
-                tid = next((i for i, t in enumerate(THICK_VALS) if abs(t - float(thick_val)) < 0.01), 1)
+                if btn_c:
+                    btn_c.setChecked(True)
+                thick_val = o.get("ell_thick") or ds.get("ell_thick", 2.0)
+                tid = next(
+                    (
+                        i
+                        for i, t in enumerate(THICK_VALS)
+                        if abs(t - float(thick_val)) < 0.01
+                    ),
+                    1,
+                )
                 btn_thick = self.group_ell_thick.button(tid)
-                if btn_thick: btn_thick.setChecked(True)
-                sid = STYLE_IDS.get(o.get('ell_style', ds.get('ell_style', ':')), 2)
+                if btn_thick:
+                    btn_thick.setChecked(True)
+                sid = STYLE_IDS.get(o.get("ell_style", ds.get("ell_style", ":")), 2)
                 btn_style = self.group_ell_style.button(sid)
-                if btn_style: btn_style.setChecked(True)
-                self.ell_color_picker.set_color(o.get('ell_color') or ds.get('ell_color') or '#606060')
-                self.ell_fill_picker.set_color(o.get('ell_fill_color') or ds.get('ell_fill_color') or 'transparent')
+                if btn_style:
+                    btn_style.setChecked(True)
+                self.ell_color_picker.set_color(
+                    o.get("ell_color") or ds.get("ell_color") or "#606060"
+                )
+                self.ell_fill_picker.set_color(
+                    o.get("ell_fill_color") or ds.get("ell_fill_color") or "transparent"
+                )
             else:
-                self.lbl_color_picker.set_color(ds.get('lbl_color', '#FF0000'))
+                self.lbl_color_picker.set_color(ds.get("lbl_color", "#FF0000"))
                 self.group_centroid_marker.button(0).setChecked(True)
                 self.group_ell_thick.button(1).setChecked(True)
                 self.group_ell_style.button(2).setChecked(True)
-                self.ell_color_picker.set_color(ds.get('ell_color') or '#606060')
-                self.ell_fill_picker.set_color(ds.get('ell_fill_color') or 'transparent')
+                self.ell_color_picker.set_color(ds.get("ell_color") or "#606060")
+                self.ell_fill_picker.set_color(
+                    ds.get("ell_fill_color") or "transparent"
+                )
         finally:
             self._updating = False
 
     def _effect_display_text(self, key, value):
-        if value is None: return ""
-        if key == 'lbl_color': return _format_color_display(value)
-        if key == 'centroid_marker': return MARKER_LABELS.get(value, str(value))
-        if key == 'ell_thick': return THICK_LABELS.get(value, str(value))
-        if key == 'ell_style': return STYLE_LABELS.get(value, str(value))
-        if key in ['ell_color', 'ell_fill_color']: return _format_color_display(value)
+        if value is None:
+            return ""
+        if key == "lbl_color":
+            return _format_color_display(value)
+        if key == "centroid_marker":
+            return MARKER_LABELS.get(value, str(value))
+        if key == "ell_thick":
+            return THICK_LABELS.get(value, str(value))
+        if key == "ell_style":
+            return STYLE_LABELS.get(value, str(value))
+        if key in ["ell_color", "ell_fill_color"]:
+            return _format_color_display(value)
         return str(value)[:20]
 
     def _effect_label(self, key):
         labels = {
-            'lbl_color': '라벨 색', 'centroid_marker': '중심점 모양',
-            'ell_thick': '타원 선 두께', 'ell_style': '타원 선 모양',
-            'ell_color': '타원 선 색', 'ell_fill_color': '타원 내부 색'
+            "lbl_color": "라벨 색",
+            "centroid_marker": "중심점 모양",
+            "ell_thick": "타원 선 두께",
+            "ell_style": "타원 선 모양",
+            "ell_color": "타원 선 색",
+            "ell_fill_color": "타원 내부 색",
         }
         return labels.get(key, key)
 
@@ -1186,27 +1385,42 @@ class LayerDockWidget(QWidget):
                 continue
             row.expand_btn.setVisible(True)
             first = True
-            for key in ['lbl_color', 'centroid_marker', 'ell_thick', 'ell_style', 'ell_color', 'ell_fill_color']:
+            for key in [
+                "lbl_color",
+                "centroid_marker",
+                "ell_thick",
+                "ell_style",
+                "ell_color",
+                "ell_fill_color",
+            ]:
                 if key not in o:
                     continue
                 if not first:
                     sep = QFrame()
                     sep.setFrameShape(QFrame.Shape.HLine)
-                    sep.setStyleSheet("color: #F0F2F5; margin-left: 4px; margin-right: 4px; margin-top: 1px; margin-bottom: 1px;")
+                    sep.setStyleSheet(
+                        "color: #F0F2F5; margin-left: 4px; margin-right: 4px; margin-top: 1px; margin-bottom: 1px;"
+                    )
                     row.effects_layout.addWidget(sep)
                 first = False
                 eff_row = QHBoxLayout()
                 eff_row.setContentsMargins(0, 0, 0, 0)
                 eff_row.setSpacing(4)
-                lbl = QLabel(f"  {self._effect_label(key)}: {self._effect_display_text(key, o[key])}", font=font_effect)
+                lbl = QLabel(
+                    f"  {self._effect_label(key)}: {self._effect_display_text(key, o[key])}",
+                    font=font_effect,
+                )
                 lbl.setStyleSheet("color: #606266;")
                 eff_row.addWidget(lbl, alignment=Qt.AlignmentFlag.AlignVCenter)
                 eff_row.addStretch()
                 x_btn = QPushButton("✕")
                 x_btn.setFixedSize(18, 18)
-                x_btn.setStyleSheet("QPushButton { border: none; color: #909399; font-size: 11px; } QPushButton:hover { color: #E64A19; }")
+                x_btn.setStyleSheet(
+                    "QPushButton { border: none; color: #909399; font-size: 11px; } QPushButton:hover { color: #E64A19; }"
+                )
                 x_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 k, v = key, vowel
+
                 # 버그 수정 반영: (checked=False 추가)
                 def remove_key(checked=False, kk=k, vv=v):
                     if self.tab_widget.currentIndex() != 0:
@@ -1221,18 +1435,30 @@ class LayerDockWidget(QWidget):
                         if v_key != vv:
                             new_overrides[v_key] = dict(o_dict)
                         else:
-                            no = {k_sub: val for k_sub, val in o_dict.items() if k_sub != kk}
+                            no = {
+                                k_sub: val
+                                for k_sub, val in o_dict.items()
+                                if k_sub != kk
+                            }
                             if no:
                                 new_overrides[v_key] = no
                     self._set_layer_overrides(new_overrides)
                     if not self._state_key:
-                        idx = getattr(getattr(self.popup, 'controller', None), 'current_idx', None)
-                        if idx is not None and hasattr(self.popup, 'layer_design_overrides_by_file'):
-                            self.popup.layer_design_overrides_by_file[idx] = {v_key: dict(o_dict) for v_key, o_dict in new_overrides.items()}
+                        idx = getattr(
+                            getattr(self.popup, "controller", None), "current_idx", None
+                        )
+                        if idx is not None and hasattr(
+                            self.popup, "layer_design_overrides_by_file"
+                        ):
+                            self.popup.layer_design_overrides_by_file[idx] = {
+                                v_key: dict(o_dict)
+                                for v_key, o_dict in new_overrides.items()
+                            }
                     self.overrides_changed.emit(new_overrides)
                     self._rebuild_effects()
-                    if hasattr(self.popup, 'on_apply'):
+                    if hasattr(self.popup, "on_apply"):
                         self.popup.on_apply()
+
                 x_btn.clicked.connect(remove_key)
                 eff_row.addWidget(x_btn)
                 w = QWidget()
@@ -1242,24 +1468,60 @@ class LayerDockWidget(QWidget):
 
     def _reset_layers_for_current_file(self):
         if self._state_key:
-            locked_set = getattr(self.popup, 'layer_locked_vowels_' + self._state_key, set())
-            ov_attr = 'layer_design_overrides_' + self._state_key
-            st_attr = 'vowel_filter_state_' + self._state_key
+            locked_set = getattr(
+                self.popup, "layer_locked_vowels_" + self._state_key, set()
+            )
+            ov_attr = "layer_design_overrides_" + self._state_key
+            st_attr = "vowel_filter_state_" + self._state_key
             current_ov = getattr(self.popup, ov_attr, {}) or {}
             current_st = getattr(self.popup, st_attr, {}) or {}
-            setattr(self.popup, ov_attr, {v: dict(ov) for v, ov in current_ov.items() if v in locked_set})
-            setattr(self.popup, st_attr, {v: st for v, st in current_st.items() if v in locked_set})
+            setattr(
+                self.popup,
+                ov_attr,
+                {v: dict(ov) for v, ov in current_ov.items() if v in locked_set},
+            )
+            setattr(
+                self.popup,
+                st_attr,
+                {v: st for v, st in current_st.items() if v in locked_set},
+            )
         else:
-            idx = getattr(self.popup, 'current_idx', getattr(self.popup.controller, 'current_idx', None))
+            idx = getattr(
+                self.popup,
+                "current_idx",
+                getattr(self.popup.controller, "current_idx", None),
+            )
             if idx is None:
                 return
-            locked_set = getattr(self.popup, 'layer_locked_vowels_by_file', {}).get(idx, set())
-            self.popup.layer_design_overrides = {v: dict(ov) for v, ov in (self.popup.layer_design_overrides or {}).items() if v in locked_set}
-            if hasattr(self.popup, 'layer_design_overrides_by_file'):
-                self.popup.layer_design_overrides_by_file[idx] = {v: dict(ov) for v, ov in (self.popup.layer_design_overrides_by_file.get(idx) or {}).items() if v in locked_set}
-            self.popup.vowel_filter_state = {v: st for v, st in (self.popup.vowel_filter_state or {}).items() if v in locked_set}
-            if hasattr(self.popup, 'vowel_filter_state_by_file'):
-                self.popup.vowel_filter_state_by_file[idx] = {v: st for v, st in (self.popup.vowel_filter_state_by_file.get(idx) or {}).items() if v in locked_set}
+            locked_set = getattr(self.popup, "layer_locked_vowels_by_file", {}).get(
+                idx, set()
+            )
+            self.popup.layer_design_overrides = {
+                v: dict(ov)
+                for v, ov in (self.popup.layer_design_overrides or {}).items()
+                if v in locked_set
+            }
+            if hasattr(self.popup, "layer_design_overrides_by_file"):
+                self.popup.layer_design_overrides_by_file[idx] = {
+                    v: dict(ov)
+                    for v, ov in (
+                        self.popup.layer_design_overrides_by_file.get(idx) or {}
+                    ).items()
+                    if v in locked_set
+                }
+            self.popup.vowel_filter_state = {
+                v: st
+                for v, st in (self.popup.vowel_filter_state or {}).items()
+                if v in locked_set
+            }
+            if hasattr(self.popup, "vowel_filter_state_by_file"):
+                self.popup.vowel_filter_state_by_file[idx] = {
+                    v: st
+                    for v, st in (
+                        self.popup.vowel_filter_state_by_file.get(idx) or {}
+                    ).items()
+                    if v in locked_set
+                }
 
         for v in list(self._semi_memory.keys()):
             if v not in locked_set:
@@ -1269,7 +1531,7 @@ class LayerDockWidget(QWidget):
         self._rebuild_effects()
         self.set_vowels(vowel_names)
         app_logger.info(config.LOG_MSG["LAYER_SETTINGS_RESET"])
-        if hasattr(self.popup, 'on_apply'):
+        if hasattr(self.popup, "on_apply"):
             self.popup.on_apply()
 
     def _on_reset_order_clicked(self):
@@ -1297,10 +1559,10 @@ class LayerDockWidget(QWidget):
     def _reset_layer_order(self):
         """레이어 표시 순서를 기본값(정렬)으로 초기화. 필터/디자인 설정은 그대로 유지."""
         # 전역 순서 저장소만 비우고, 현재 모음 목록을 다시 그리면 _get_ordered_vowels_for_display가 정렬 순서를 사용.
-        if hasattr(self.popup, 'layer_order'):
+        if hasattr(self.popup, "layer_order"):
             self.popup.layer_order = []
         vowels = list(self._layer_rows.keys())
         self.set_vowels(vowels)
-        if hasattr(self, 'order_changed'):
+        if hasattr(self, "order_changed"):
             self.order_changed.emit(self._get_ordered_vowels_for_display(vowels))
         app_logger.info(config.LOG_MSG["LAYER_ORDER_RESET"])

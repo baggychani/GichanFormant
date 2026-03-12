@@ -2,12 +2,33 @@
 
 import os
 import config
-from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout,
-                             QLabel, QPushButton, QComboBox,
-                             QScrollArea, QFrame, QColorDialog, QButtonGroup,
-                             QSizePolicy, QTabWidget, QGridLayout)
+from PyQt6.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QComboBox,
+    QScrollArea,
+    QFrame,
+    QColorDialog,
+    QButtonGroup,
+    QSizePolicy,
+    QTabWidget,
+    QGridLayout,
+)
 from PyQt6.QtCore import Qt, pyqtSignal, QRectF, QPointF
-from PyQt6.QtGui import QFont, QColor, QCursor, QPainter, QPainterPath, QPen, QPixmap, QIcon, QPolygonF
+from PyQt6.QtGui import (
+    QFont,
+    QColor,
+    QCursor,
+    QPainter,
+    QPainterPath,
+    QPen,
+    QPixmap,
+    QIcon,
+    QPolygonF,
+)
 
 from .icon_widgets import (
     create_font_style_icon,
@@ -17,12 +38,17 @@ from .icon_widgets import (
     MarkerShapeButton,
     ColorCircleButton,
 )
-from .display_utils import truncate_display_name, MAX_DISPLAY_NAME_LEN, strip_gichan_prefix
+from .display_utils import (
+    truncate_display_name,
+    MAX_DISPLAY_NAME_LEN,
+    strip_gichan_prefix,
+)
 from . import layout_constants as lc
 
 
 class NoWheelComboBox(QComboBox):
     """마우스 휠로 값이 바뀌지 않도록 휠 이벤트를 무시하는 콤보박스."""
+
     def wheelEvent(self, event):
         event.ignore()
 
@@ -31,6 +57,7 @@ class ToggleSwitch(QWidget):
     """
     체크박스 대신 사용할 커스텀 ON/OFF 토글 스위치 위젯
     """
+
     toggled = pyqtSignal(bool)
 
     def __init__(self, checked=False, parent=None):
@@ -75,9 +102,10 @@ class ColorPalette(QWidget):
     """
     디자인 설정용 색상 선택 컴포넌트
     """
+
     color_changed = pyqtSignal(str)
 
-    def __init__(self, default_color='#000000', allow_transparent=False, parent=None):
+    def __init__(self, default_color="#000000", allow_transparent=False, parent=None):
         super().__init__(parent)
         self.current_color = default_color
         self.allow_transparent = allow_transparent
@@ -87,22 +115,22 @@ class ColorPalette(QWidget):
         self.main_layout.setSpacing(4)
 
         self.color_names = {
-            '#E64A19': 'Red',
-            '#F57C00': 'Orange',
-            '#FFEB3B': 'Yellow',
-            '#388E3C': 'Green',
-            '#00BCD4': 'Cyan',
-            '#1976D2': 'Blue',
-            '#7B1FA2': 'Purple',
-            '#E91E63': 'Pink',
-            '#000000': 'Black',
-            '#606060': 'Dark Gray',
-            '#AAAAAA': 'Light Gray',
-            '#795548': 'Brown',
-            '#009688': 'Teal',
-            '#FF9800': 'Amber',
-            'transparent': 'Transparent',
-            'custom': 'Custom Color'
+            "#E64A19": "Red",
+            "#F57C00": "Orange",
+            "#FFEB3B": "Yellow",
+            "#388E3C": "Green",
+            "#00BCD4": "Cyan",
+            "#1976D2": "Blue",
+            "#7B1FA2": "Purple",
+            "#E91E63": "Pink",
+            "#000000": "Black",
+            "#606060": "Dark Gray",
+            "#AAAAAA": "Light Gray",
+            "#795548": "Brown",
+            "#009688": "Teal",
+            "#FF9800": "Amber",
+            "transparent": "Transparent",
+            "custom": "Custom Color",
         }
 
         palette_row = QHBoxLayout()
@@ -110,21 +138,35 @@ class ColorPalette(QWidget):
         btn_list = []
 
         if self.allow_transparent:
-            btn_none = ColorCircleButton('transparent', is_transparent=True, tooltip="Transparent")
-            btn_none.clicked.connect(lambda: self.set_color('transparent'))
+            btn_none = ColorCircleButton(
+                "transparent", is_transparent=True, tooltip="Transparent"
+            )
+            btn_none.clicked.connect(lambda: self.set_color("transparent"))
             btn_list.append(btn_none)
 
         preset_colors = [
-            '#E64A19', '#F57C00', '#FFEB3B', '#388E3C', '#00BCD4', '#1976D2', '#7B1FA2', '#E91E63',
-            '#000000', '#606060', '#AAAAAA', '#795548', '#009688', '#FF9800'
+            "#E64A19",
+            "#F57C00",
+            "#FFEB3B",
+            "#388E3C",
+            "#00BCD4",
+            "#1976D2",
+            "#7B1FA2",
+            "#E91E63",
+            "#000000",
+            "#606060",
+            "#AAAAAA",
+            "#795548",
+            "#009688",
+            "#FF9800",
         ]
         for c in preset_colors:
-            c_name = self.color_names.get(c, 'Color')
+            c_name = self.color_names.get(c, "Color")
             btn = ColorCircleButton(c, tooltip=f"{c_name} ({c})")
             btn.clicked.connect(lambda checked, col=c: self.set_color(col))
             btn_list.append(btn)
 
-        self.btn_custom = ColorCircleButton('custom', tooltip="Custom Color")
+        self.btn_custom = ColorCircleButton("custom", tooltip="Custom Color")
         self.btn_custom.clicked.connect(self.open_color_dialog)
         btn_list.append(self.btn_custom)
 
@@ -141,8 +183,8 @@ class ColorPalette(QWidget):
 
         self.preview = ColorCircleButton(
             self.current_color,
-            is_transparent=(self.current_color == 'transparent'),
-            tooltip=f"Current Color : {self._get_tooltip_string(self.current_color)}"
+            is_transparent=(self.current_color == "transparent"),
+            tooltip=f"Current Color : {self._get_tooltip_string(self.current_color)}",
         )
         self.preview.setCursor(QCursor(Qt.CursorShape.ArrowCursor))
 
@@ -150,7 +192,7 @@ class ColorPalette(QWidget):
         self.main_layout.addLayout(palette_row)
 
     def _get_tooltip_string(self, color_hex):
-        if color_hex == 'transparent':
+        if color_hex == "transparent":
             return "Transparent"
         key = color_hex if color_hex in self.color_names else color_hex.upper()
         name = self.color_names.get(key, "Custom Color")
@@ -161,7 +203,7 @@ class ColorPalette(QWidget):
     def set_color(self, color):
         if self.current_color != color:
             self.current_color = color
-            self.preview.set_color(color, is_transparent=(color == 'transparent'))
+            self.preview.set_color(color, is_transparent=(color == "transparent"))
 
             tooltip_str = self._get_tooltip_string(color)
             self.preview.setToolTip(f"Current Color : {tooltip_str}")
@@ -169,7 +211,11 @@ class ColorPalette(QWidget):
             self.color_changed.emit(self.current_color)
 
     def open_color_dialog(self):
-        initial_color = QColor(self.current_color) if self.current_color != 'transparent' else QColor('#FFFFFF')
+        initial_color = (
+            QColor(self.current_color)
+            if self.current_color != "transparent"
+            else QColor("#FFFFFF")
+        )
         color = QColorDialog.getColor(initial_color, self, "색상 선택")
         if color.isValid():
             self.set_color(color.name())
@@ -179,6 +225,7 @@ class DesignSettingsPanel(QWidget):
     """
     단일 플롯 전용 디자인 설정 패널입니다.
     """
+
     settings_changed = pyqtSignal(dict)
     label_move_clicked = pyqtSignal()
 
@@ -205,7 +252,9 @@ class DesignSettingsPanel(QWidget):
         group = QButtonGroup(self)
 
         frame = QFrame()
-        frame.setStyleSheet("QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }")
+        frame.setStyleSheet(
+            "QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }"
+        )
 
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(2, 2, 2, 2)
@@ -214,7 +263,13 @@ class DesignSettingsPanel(QWidget):
         for i, opt in enumerate(options):
             w, s, r, tooltip = opt[:4]
             dash = opt[4] if len(opt) > 4 else None
-            btn = LinePreviewButton(line_width=w, line_style=s, radius_css=r, tooltip=tooltip, dash_pattern=dash)
+            btn = LinePreviewButton(
+                line_width=w,
+                line_style=s,
+                radius_css=r,
+                tooltip=tooltip,
+                dash_pattern=dash,
+            )
             group.addButton(btn, i)
             layout.addWidget(btn)
 
@@ -236,7 +291,9 @@ class DesignSettingsPanel(QWidget):
         scroll_content = QWidget()
         scroll_content.setStyleSheet("QWidget { background-color: white; }")
         scroll_content.setMaximumWidth(260)
-        scroll_content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        scroll_content.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
         layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(12, 12, 12, 15)
         layout.setSpacing(14)
@@ -307,7 +364,9 @@ class DesignSettingsPanel(QWidget):
         lbl_dp.setMinimumWidth(95)
         dp_shape_row.addWidget(lbl_dp)
         self.group_raw_marker = QButtonGroup(self)
-        for i, (key, tip) in enumerate([('o', '빈 원'), ('x', 'x 모양'), ('a', '라벨 문자(모음 기호)')]):
+        for i, (key, tip) in enumerate(
+            [("o", "빈 원"), ("x", "x 모양"), ("a", "라벨 문자(모음 기호)")]
+        ):
             btn = QPushButton("")
             btn.setCheckable(True)
             btn.setProperty("val", key)
@@ -317,7 +376,7 @@ class DesignSettingsPanel(QWidget):
             btn.setIcon(create_raw_marker_icon(key))
             btn.setIconSize(QPixmap(24, 24).size())
             btn.setToolTip(tip)
-            if key == 'o':
+            if key == "o":
                 btn.setChecked(True)
             self.group_raw_marker.addButton(btn, i)
             dp_shape_row.addWidget(btn)
@@ -350,7 +409,9 @@ class DesignSettingsPanel(QWidget):
         color_layout = QVBoxLayout()
         color_layout.setSpacing(6)
         color_layout.addWidget(QLabel("라벨 텍스트 색상:", font=font_normal))
-        self.lbl_color_picker = ColorPalette(default_color='#E64A19', allow_transparent=True, parent=self)
+        self.lbl_color_picker = ColorPalette(
+            default_color="#E64A19", allow_transparent=True, parent=self
+        )
         color_layout.addWidget(self.lbl_color_picker)
         label_group.addLayout(color_layout)
         label_group.addSpacing(4)
@@ -360,7 +421,8 @@ class DesignSettingsPanel(QWidget):
 
         self.combo_lbl_size = NoWheelComboBox()
         self.combo_lbl_size.setStyleSheet(
-            "QComboBox { padding: 2px 4px; border: 1px solid #DCDFE6; border-radius: 3px; }")
+            "QComboBox { padding: 2px 4px; border: 1px solid #DCDFE6; border-radius: 3px; }"
+        )
         self.combo_lbl_size.addItems(["14", "16", "18", "20", "22", "24"])
         self.combo_lbl_size.setCurrentText("20")
         self.combo_lbl_size.setFixedWidth(55)
@@ -409,7 +471,9 @@ class DesignSettingsPanel(QWidget):
         centroid_marker_layout.addWidget(lbl_centroid)
         centroid_marker_layout.addStretch()
         self.group_centroid_marker = QButtonGroup(self)
-        for i, (mk, tip) in enumerate([('o', "동그라미"), ('s', "사각형"), ('^', "삼각형"), ('D', "다이아몬드")]):
+        for i, (mk, tip) in enumerate(
+            [("o", "동그라미"), ("s", "사각형"), ("^", "삼각형"), ("D", "다이아몬드")]
+        ):
             btn = MarkerShapeButton(mk, tooltip=tip)
             self.group_centroid_marker.addButton(btn, i)
             centroid_marker_layout.addWidget(btn)
@@ -427,14 +491,18 @@ class DesignSettingsPanel(QWidget):
         ell_group.addWidget(QLabel("신뢰 타원", font=font_bold))
 
         ell_group.addWidget(QLabel("타원 선 타입:", font=font_normal))
-        thicks = [(1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
-                  (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
-                  (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게")]
+        thicks = [
+            (1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
+            (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
+            (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게"),
+        ]
         thick_frame, self.group_ell_thick = self._create_visual_button_group(thicks, 1)
         # 실선/긴 점선/짧은 점선. 버튼 아이콘은 레이어 도크와 동일하게 DashLine/DotLine 사용
-        styles = [(2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
-                  (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
-                  (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선")]
+        styles = [
+            (2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
+            (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
+            (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선"),
+        ]
         style_frame, self.group_ell_style = self._create_visual_button_group(styles, 2)
         ell_type_row = QVBoxLayout()
         ell_type_row.setSpacing(4)
@@ -445,14 +513,18 @@ class DesignSettingsPanel(QWidget):
         ell_line_color_layout = QVBoxLayout()
         ell_line_color_layout.setSpacing(6)
         ell_line_color_layout.addWidget(QLabel("타원 선 색상:", font=font_normal))
-        self.ell_line_picker = ColorPalette(default_color='#606060', allow_transparent=True, parent=self)
+        self.ell_line_picker = ColorPalette(
+            default_color="#606060", allow_transparent=True, parent=self
+        )
         ell_line_color_layout.addWidget(self.ell_line_picker)
         ell_group.addLayout(ell_line_color_layout)
 
         ell_fill_color_layout = QVBoxLayout()
         ell_fill_color_layout.setSpacing(6)
         ell_fill_color_layout.addWidget(QLabel("타원 내부 색상:", font=font_normal))
-        self.ell_fill_picker = ColorPalette(default_color='transparent', allow_transparent=True, parent=self)
+        self.ell_fill_picker = ColorPalette(
+            default_color="transparent", allow_transparent=True, parent=self
+        )
         ell_fill_color_layout.addWidget(self.ell_fill_picker)
         ell_group.addLayout(ell_fill_color_layout)
 
@@ -476,16 +548,26 @@ class DesignSettingsPanel(QWidget):
         self.graph_bg_toggle_btn.setFixedSize(28, 24)
         self.graph_bg_toggle_btn.setFlat(True)
         self.graph_bg_toggle_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.graph_bg_toggle_btn.setStyleSheet("QPushButton { color: #606266; font-size: 11px; }")
+        self.graph_bg_toggle_btn.setStyleSheet(
+            "QPushButton { color: #606266; font-size: 11px; }"
+        )
         graph_header_layout.addWidget(self.graph_bg_toggle_btn)
         graph_header_layout.addStretch()
         graph_group.addWidget(graph_header_row)
 
         # 항상 보이는 3개: 사방 테두리, 배경 실선(Grid), Y축 라벨 눕히기
-        row5, self.sw_box_spines = self._create_toggle_row("사방 테두리", default_checked=False)
-        row6, self.sw_show_grid = self._create_toggle_row("배경 실선(Grid)", default_checked=False)
-        row_y_rot, self.sw_y_label_rotation = self._create_toggle_row("Y축 라벨 눕히기", default_checked=False)
-        self.sw_y_label_rotation.setToolTip("Y축(F1 등) 글자를 90도 눕혀 표시합니다. 끄면 똑바로 세웁니다.")
+        row5, self.sw_box_spines = self._create_toggle_row(
+            "사방 테두리", default_checked=False
+        )
+        row6, self.sw_show_grid = self._create_toggle_row(
+            "배경 실선(Grid)", default_checked=False
+        )
+        row_y_rot, self.sw_y_label_rotation = self._create_toggle_row(
+            "Y축 라벨 눕히기", default_checked=False
+        )
+        self.sw_y_label_rotation.setToolTip(
+            "Y축(F1 등) 글자를 90도 눕혀 표시합니다. 끄면 똑바로 세웁니다."
+        )
         graph_group.addLayout(row5)
         graph_group.addLayout(row6)
         graph_group.addLayout(row_y_rot)
@@ -503,12 +585,24 @@ class DesignSettingsPanel(QWidget):
         graph_content_layout.setContentsMargins(0, 4, 0, 0)
         graph_content_layout.setSpacing(10)
 
-        row_unit, self.sw_show_axis_units = self._create_toggle_row("눈금 단위", default_checked=False)
-        self.sw_show_axis_units.setToolTip("ON 시 X·Y축 이름 뒤에 (Hz) 등 눈금 단위 표시")
-        row_minor, self.sw_show_minor_ticks = self._create_toggle_row("세부 눈금 표시", default_checked=True)
-        self.sw_show_minor_ticks.setToolTip("ON 시 주 눈금 사이에 세부 눈금을 표시합니다.")
-        row_axis, self.sw_axis_position_swap = self._create_toggle_row("축·눈금 위치 반전", default_checked=False)
-        self.sw_axis_position_swap.setToolTip("Praat에서 아래/왼쪽, 수학에서 위/오른쪽에 축과 눈금을 표시합니다.")
+        row_unit, self.sw_show_axis_units = self._create_toggle_row(
+            "눈금 단위", default_checked=False
+        )
+        self.sw_show_axis_units.setToolTip(
+            "ON 시 X·Y축 이름 뒤에 (Hz) 등 눈금 단위 표시"
+        )
+        row_minor, self.sw_show_minor_ticks = self._create_toggle_row(
+            "세부 눈금 표시", default_checked=True
+        )
+        self.sw_show_minor_ticks.setToolTip(
+            "ON 시 주 눈금 사이에 세부 눈금을 표시합니다."
+        )
+        row_axis, self.sw_axis_position_swap = self._create_toggle_row(
+            "축·눈금 위치 반전", default_checked=False
+        )
+        self.sw_axis_position_swap.setToolTip(
+            "Praat에서 아래/왼쪽, 수학에서 위/오른쪽에 축과 눈금을 표시합니다."
+        )
         graph_content_layout.addLayout(row_unit)
         graph_content_layout.addLayout(row_minor)
         graph_content_layout.addLayout(row_axis)
@@ -519,6 +613,7 @@ class DesignSettingsPanel(QWidget):
             self.graph_bg_content.setVisible(visible)
             self.graph_bg_collapse_line.setVisible(visible)
             self.graph_bg_toggle_btn.setText("▶" if not visible else "▼")
+
         self.graph_bg_toggle_btn.clicked.connect(toggle_graph_bg)
         graph_header_row.mousePressEvent = lambda e: toggle_graph_bg()
 
@@ -537,7 +632,9 @@ class DesignSettingsPanel(QWidget):
         # 5. 하단 액션 버튼 (설정 유지 / 초기화 분할)
         # ==========================================
         bottom_container = QWidget()
-        bottom_container.setStyleSheet("background-color: white; border-top: 1px solid #E4E7ED;")
+        bottom_container.setStyleSheet(
+            "background-color: white; border-top: 1px solid #E4E7ED;"
+        )
         bottom_layout = QHBoxLayout(bottom_container)
         bottom_layout.setContentsMargins(12, 10, 12, 10)
         bottom_layout.setSpacing(8)
@@ -583,9 +680,16 @@ class DesignSettingsPanel(QWidget):
         layout.addWidget(line)
 
     def _connect_signals(self):
-        for sw in [self.sw_show_raw, self.sw_show_centroid, self.sw_show_axis_units,
-                   self.sw_axis_position_swap, self.sw_y_label_rotation, self.sw_box_spines, self.sw_show_grid,
-                   self.sw_show_minor_ticks]:
+        for sw in [
+            self.sw_show_raw,
+            self.sw_show_centroid,
+            self.sw_show_axis_units,
+            self.sw_axis_position_swap,
+            self.sw_y_label_rotation,
+            self.sw_box_spines,
+            self.sw_show_grid,
+            self.sw_show_minor_ticks,
+        ]:
             sw.toggled.connect(self._on_setting_changed)
 
         self.combo_lbl_size.currentTextChanged.connect(self._on_setting_changed)
@@ -616,7 +720,7 @@ class DesignSettingsPanel(QWidget):
         self.sw_show_centroid.setChecked(True)
         self.sw_show_axis_units.setChecked(False)
 
-        self.lbl_color_picker.set_color('#E64A19')
+        self.lbl_color_picker.set_color("#E64A19")
         self.combo_lbl_size.setCurrentText("20")
         self.btn_bold.setChecked(True)
         self.btn_italic.setChecked(False)
@@ -627,8 +731,8 @@ class DesignSettingsPanel(QWidget):
         self.group_font_style.button(0).setChecked(True)  # serif(명조) 기본
         self.group_raw_marker.button(0).setChecked(True)
 
-        self.ell_line_picker.set_color('#606060')
-        self.ell_fill_picker.set_color('transparent')
+        self.ell_line_picker.set_color("#606060")
+        self.ell_fill_picker.set_color("transparent")
 
         self.sw_axis_position_swap.setChecked(False)
         self.sw_y_label_rotation.setChecked(False)
@@ -646,40 +750,38 @@ class DesignSettingsPanel(QWidget):
 
     def get_current_settings(self):
         thick_map = {0: 0.5, 1: 1.0, 2: 2.0}
-        style_map = {0: '-', 1: '---', 2: '--'}  # 실선, 긴 점선, 짧은 점선
-        marker_map = {0: 'o', 1: 's', 2: '^', 3: 'D'}
+        style_map = {0: "-", 1: "---", 2: "--"}  # 실선, 긴 점선, 짧은 점선
+        marker_map = {0: "o", 1: "s", 2: "^", 3: "D"}
 
         line_color = self.ell_line_picker.current_color
         fill_color = self.ell_fill_picker.current_color
 
-        font_style = 'serif' if self.group_font_style.checkedId() == 0 else 'sans'
+        font_style = "serif" if self.group_font_style.checkedId() == 0 else "sans"
         raw_marker_id = self.group_raw_marker.checkedId()
-        raw_marker = ['o', 'x', 'a'][raw_marker_id] if 0 <= raw_marker_id <= 2 else 'o'
+        raw_marker = ["o", "x", "a"][raw_marker_id] if 0 <= raw_marker_id <= 2 else "o"
         return {
-            'show_raw': self.sw_show_raw.isChecked(),
-            'show_centroid': self.sw_show_centroid.isChecked(),
-            'show_axis_units': self.sw_show_axis_units.isChecked(),
-            'centroid_marker': marker_map.get(self.group_centroid_marker.checkedId(), 'o'),
-            'raw_marker': raw_marker,
-            'font_style': font_style,
-
-            'lbl_color': self.lbl_color_picker.current_color,
-            'lbl_size': int(self.combo_lbl_size.currentText()),
-            'lbl_bold': self.btn_bold.isChecked(),
-            'lbl_italic': self.btn_italic.isChecked(),
-
-            'ell_thick': thick_map.get(self.group_ell_thick.checkedId(), 1.0),
-            'ell_style': style_map.get(self.group_ell_style.checkedId(), '--'),
-            'ell_color': line_color if line_color != 'transparent' else None,
-            'ell_fill_color': fill_color if fill_color != 'transparent' else None,
-
-            'axis_position_swap': self.sw_axis_position_swap.isChecked(),
-            'y_label_rotation': self.sw_y_label_rotation.isChecked(),
-            'box_spines': self.sw_box_spines.isChecked(),
-            'show_grid': self.sw_show_grid.isChecked(),
-            'show_minor_ticks': self.sw_show_minor_ticks.isChecked(),
-
-            'is_locked': self.btn_lock.isChecked()
+            "show_raw": self.sw_show_raw.isChecked(),
+            "show_centroid": self.sw_show_centroid.isChecked(),
+            "show_axis_units": self.sw_show_axis_units.isChecked(),
+            "centroid_marker": marker_map.get(
+                self.group_centroid_marker.checkedId(), "o"
+            ),
+            "raw_marker": raw_marker,
+            "font_style": font_style,
+            "lbl_color": self.lbl_color_picker.current_color,
+            "lbl_size": int(self.combo_lbl_size.currentText()),
+            "lbl_bold": self.btn_bold.isChecked(),
+            "lbl_italic": self.btn_italic.isChecked(),
+            "ell_thick": thick_map.get(self.group_ell_thick.checkedId(), 1.0),
+            "ell_style": style_map.get(self.group_ell_style.checkedId(), "--"),
+            "ell_color": line_color if line_color != "transparent" else None,
+            "ell_fill_color": fill_color if fill_color != "transparent" else None,
+            "axis_position_swap": self.sw_axis_position_swap.isChecked(),
+            "y_label_rotation": self.sw_y_label_rotation.isChecked(),
+            "box_spines": self.sw_box_spines.isChecked(),
+            "show_grid": self.sw_show_grid.isChecked(),
+            "show_minor_ticks": self.sw_show_minor_ticks.isChecked(),
+            "is_locked": self.btn_lock.isChecked(),
         }
 
 
@@ -687,10 +789,18 @@ class CompareDesignSettingsPanel(QWidget):
     """
     다중 비교 플롯 전용 디자인 설정 패널입니다.
     """
+
     settings_changed = pyqtSignal(dict)
     label_move_clicked = pyqtSignal(str)  # 'blue' | 'red'
 
-    def __init__(self, name_blue="기준 데이터", name_red="비교 데이터", parent=None, ui_font_name="Malgun Gothic", is_normalized=False):
+    def __init__(
+        self,
+        name_blue="기준 데이터",
+        name_red="비교 데이터",
+        parent=None,
+        ui_font_name="Malgun Gothic",
+        is_normalized=False,
+    ):
         super().__init__(parent)
         self.ui_font_name = ui_font_name
         self.name_blue = name_blue
@@ -715,7 +825,9 @@ class CompareDesignSettingsPanel(QWidget):
     def _create_visual_button_group(self, options, default_idx):
         group = QButtonGroup(self)
         frame = QFrame()
-        frame.setStyleSheet("QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }")
+        frame.setStyleSheet(
+            "QFrame { background-color: white; border: 1px solid #DCDFE6; border-radius: 4px; }"
+        )
         layout = QHBoxLayout(frame)
         layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(0)
@@ -723,7 +835,13 @@ class CompareDesignSettingsPanel(QWidget):
         for i, opt in enumerate(options):
             w, s, r, tooltip = opt[:4]
             dash = opt[4] if len(opt) > 4 else None
-            btn = LinePreviewButton(line_width=w, line_style=s, radius_css=r, tooltip=tooltip, dash_pattern=dash)
+            btn = LinePreviewButton(
+                line_width=w,
+                line_style=s,
+                radius_css=r,
+                tooltip=tooltip,
+                dash_pattern=dash,
+            )
             group.addButton(btn, i)
             layout.addWidget(btn)
 
@@ -740,7 +858,7 @@ class CompareDesignSettingsPanel(QWidget):
         font_normal = QFont(self.ui_font_name, 9)
 
         # 0. 데이터 범례 (현재 탭 파일명)
-        file_name = self.name_blue if series == 'blue' else self.name_red
+        file_name = self.name_blue if series == "blue" else self.name_red
         clean_name = os.path.splitext(file_name)[0]
         display_name = truncate_display_name(clean_name, MAX_DISPLAY_NAME_LEN)
         legend_row = QHBoxLayout()
@@ -784,7 +902,9 @@ class CompareDesignSettingsPanel(QWidget):
         color_layout = QVBoxLayout()
         color_layout.setSpacing(6)
         color_layout.addWidget(QLabel("라벨 텍스트 색상:", font=font_normal))
-        lbl_color_picker = ColorPalette(default_color=default_color, allow_transparent=True, parent=self)
+        lbl_color_picker = ColorPalette(
+            default_color=default_color, allow_transparent=True, parent=self
+        )
         color_layout.addWidget(lbl_color_picker)
         lbl_group.addLayout(color_layout)
         lbl_group.addSpacing(4)
@@ -793,7 +913,9 @@ class CompareDesignSettingsPanel(QWidget):
         font_style_layout.addWidget(QLabel("폰트:", font=font_normal))
 
         combo_lbl_size = NoWheelComboBox()
-        combo_lbl_size.setStyleSheet("QComboBox { padding: 2px 4px; border: 1px solid #DCDFE6; border-radius: 3px; }")
+        combo_lbl_size.setStyleSheet(
+            "QComboBox { padding: 2px 4px; border: 1px solid #DCDFE6; border-radius: 3px; }"
+        )
         combo_lbl_size.addItems(["12", "14", "16", "18", "20", "22", "24"])
         combo_lbl_size.setCurrentText("20")
         combo_lbl_size.setFixedWidth(55)
@@ -839,7 +961,9 @@ class CompareDesignSettingsPanel(QWidget):
         centroid_marker_layout.addWidget(lbl_centroid)
         centroid_marker_layout.addStretch()
         group_centroid_marker = QButtonGroup(self)
-        for i, (mk, tip) in enumerate([('o', "동그라미"), ('s', "사각형"), ('^', "삼각형"), ('D', "다이아몬드")]):
+        for i, (mk, tip) in enumerate(
+            [("o", "동그라미"), ("s", "사각형"), ("^", "삼각형"), ("D", "다이아몬드")]
+        ):
             btn = MarkerShapeButton(mk, tooltip=tip)
             group_centroid_marker.addButton(btn, i)
             centroid_marker_layout.addWidget(btn)
@@ -860,17 +984,23 @@ class CompareDesignSettingsPanel(QWidget):
         ell_group.addWidget(QLabel("신뢰 타원", font=font_bold))
 
         ell_group.addWidget(QLabel("타원 선 타입:", font=font_normal))
-        thicks = [(1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
-                  (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
-                  (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게")]
+        thicks = [
+            (1.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "얇게"),
+            (2.0, Qt.PenStyle.SolidLine, "0px", "보통"),
+            (3.5, Qt.PenStyle.SolidLine, "0 4px 4px 0", "두껍게"),
+        ]
         thick_frame, group_ell_thick = self._create_visual_button_group(thicks, 1)
         # 버튼 아이콘은 레이어 도크와 동일하게 DashLine/DotLine 사용. default_style_str -> 인덱스: '-'=0, '---'=1, '--'=2
-        style_str_to_idx = {'-': 0, '---': 1, '--': 2}
+        style_str_to_idx = {"-": 0, "---": 1, "--": 2}
         default_style_idx = style_str_to_idx.get(default_style_str, 0)
-        styles = [(2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
-                  (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
-                  (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선")]
-        style_frame, group_ell_style = self._create_visual_button_group(styles, default_style_idx)
+        styles = [
+            (2.0, Qt.PenStyle.SolidLine, "4px 0 0 4px", "실선"),
+            (2.0, Qt.PenStyle.DashLine, "0px", "긴 점선"),
+            (2.0, Qt.PenStyle.DotLine, "0 4px 4px 0", "짧은 점선"),
+        ]
+        style_frame, group_ell_style = self._create_visual_button_group(
+            styles, default_style_idx
+        )
         ell_type_row = QVBoxLayout()
         ell_type_row.setSpacing(4)
         ell_type_row.addWidget(thick_frame)
@@ -880,14 +1010,18 @@ class CompareDesignSettingsPanel(QWidget):
         ell_line_color_layout = QVBoxLayout()
         ell_line_color_layout.setSpacing(6)
         ell_line_color_layout.addWidget(QLabel("타원 선 색상:", font=font_normal))
-        ell_line_picker = ColorPalette(default_color=default_color, allow_transparent=True, parent=self)
+        ell_line_picker = ColorPalette(
+            default_color=default_color, allow_transparent=True, parent=self
+        )
         ell_line_color_layout.addWidget(ell_line_picker)
         ell_group.addLayout(ell_line_color_layout)
 
         ell_fill_color_layout = QVBoxLayout()
         ell_fill_color_layout.setSpacing(6)
         ell_fill_color_layout.addWidget(QLabel("타원 내부 색상:", font=font_normal))
-        ell_fill_picker = ColorPalette(default_color='transparent', allow_transparent=True, parent=self)
+        ell_fill_picker = ColorPalette(
+            default_color="transparent", allow_transparent=True, parent=self
+        )
         ell_fill_color_layout.addWidget(ell_fill_picker)
         ell_group.addLayout(ell_fill_color_layout)
 
@@ -895,18 +1029,18 @@ class CompareDesignSettingsPanel(QWidget):
         layout.addStretch()
 
         controls = {
-            'btn_label_move': btn_label_move,
-            'legend_icon': icon_lbl,
-            'legend_a': lbl_a,
-            'lbl_color_picker': lbl_color_picker,
-            'combo_lbl_size': combo_lbl_size,
-            'btn_bold': btn_bold,
-            'btn_italic': btn_italic,
-            'group_centroid_marker': group_centroid_marker,
-            'group_ell_thick': group_ell_thick,
-            'group_ell_style': group_ell_style,
-            'ell_line_picker': ell_line_picker,
-            'ell_fill_picker': ell_fill_picker
+            "btn_label_move": btn_label_move,
+            "legend_icon": icon_lbl,
+            "legend_a": lbl_a,
+            "lbl_color_picker": lbl_color_picker,
+            "combo_lbl_size": combo_lbl_size,
+            "btn_bold": btn_bold,
+            "btn_italic": btn_italic,
+            "group_centroid_marker": group_centroid_marker,
+            "group_ell_thick": group_ell_thick,
+            "group_ell_style": group_ell_style,
+            "ell_line_picker": ell_line_picker,
+            "ell_fill_picker": ell_fill_picker,
         }
         return tab_widget, controls
 
@@ -914,23 +1048,27 @@ class CompareDesignSettingsPanel(QWidget):
         """디자인 설정 변경 시 각 탭(Blue/Red) 상단 범례 아이콘·텍스트 색상을 실시간 반영. 점 모양은 모음 중심점 모양을 따름."""
         if not settings:
             return
-        marker_map = ['o', 's', '^', 'D']
-        for series, ctrl in [('blue', self.ctrl_blue), ('red', self.ctrl_red)]:
+        marker_map = ["o", "s", "^", "D"]
+        for series, ctrl in [("blue", self.ctrl_blue), ("red", self.ctrl_red)]:
             cfg = settings.get(series, {})
-            ell_color = cfg.get('ell_color') or ('#1976D2' if series == 'blue' else '#E64A19')
-            if ell_color == 'transparent':
-                ell_color = '#1976D2' if series == 'blue' else '#E64A19'
-            ell_style = cfg.get('ell_style', '-' if series == 'blue' else '--')
-            centroid_marker = cfg.get('centroid_marker', 'o')
+            ell_color = cfg.get("ell_color") or (
+                "#1976D2" if series == "blue" else "#E64A19"
+            )
+            if ell_color == "transparent":
+                ell_color = "#1976D2" if series == "blue" else "#E64A19"
+            ell_style = cfg.get("ell_style", "-" if series == "blue" else "--")
+            centroid_marker = cfg.get("centroid_marker", "o")
             if centroid_marker not in marker_map:
-                centroid_marker = 'o'
-            if 'legend_icon' in ctrl:
-                ctrl['legend_icon'].setPixmap(create_legend_icon_design(ell_color, ell_style, centroid_marker))
-            lbl_color = cfg.get('lbl_color') or ell_color
-            if lbl_color == 'transparent':
+                centroid_marker = "o"
+            if "legend_icon" in ctrl:
+                ctrl["legend_icon"].setPixmap(
+                    create_legend_icon_design(ell_color, ell_style, centroid_marker)
+                )
+            lbl_color = cfg.get("lbl_color") or ell_color
+            if lbl_color == "transparent":
                 lbl_color = ell_color
-            if 'legend_a' in ctrl:
-                ctrl['legend_a'].setStyleSheet(f"color: {lbl_color};")
+            if "legend_a" in ctrl:
+                ctrl["legend_a"].setStyleSheet(f"color: {lbl_color};")
 
     def _setup_compare_data_section(self, layout, font_bold):
         """CompareDesignSettingsPanel: 데이터 표시 구역."""
@@ -954,7 +1092,9 @@ class CompareDesignSettingsPanel(QWidget):
         style_group.addWidget(QLabel("스타일", font=font_bold))
         font_style_row = QHBoxLayout()
         font_style_row.setSpacing(4)
-        lbl_font_style_c = QLabel("폰트 스타일:", font=QFont(self.ui_font_name, config.FONT_SIZE_SMALL))
+        lbl_font_style_c = QLabel(
+            "폰트 스타일:", font=QFont(self.ui_font_name, config.FONT_SIZE_SMALL)
+        )
         lbl_font_style_c.setMinimumWidth(95)
         font_style_row.addWidget(lbl_font_style_c)
         btn_style = """
@@ -988,11 +1128,15 @@ class CompareDesignSettingsPanel(QWidget):
         style_group.addLayout(font_style_row)
         dp_shape_row = QHBoxLayout()
         dp_shape_row.setSpacing(4)
-        lbl_dp_c = QLabel("데이터 포인트:", font=QFont(self.ui_font_name, config.FONT_SIZE_SMALL))
+        lbl_dp_c = QLabel(
+            "데이터 포인트:", font=QFont(self.ui_font_name, config.FONT_SIZE_SMALL)
+        )
         lbl_dp_c.setMinimumWidth(95)
         dp_shape_row.addWidget(lbl_dp_c)
         self.group_raw_marker_common = QButtonGroup(self)
-        for i, (key, tip) in enumerate([('o', '빈 원'), ('x', 'x 모양'), ('a', '라벨 문자(모음 기호)')]):
+        for i, (key, tip) in enumerate(
+            [("o", "빈 원"), ("x", "x 모양"), ("a", "라벨 문자(모음 기호)")]
+        ):
             btn = QPushButton("")
             btn.setCheckable(True)
             btn.setProperty("val", key)
@@ -1002,7 +1146,7 @@ class CompareDesignSettingsPanel(QWidget):
             btn.setIcon(create_raw_marker_icon(key))
             btn.setIconSize(QPixmap(24, 24).size())
             btn.setToolTip(tip)
-            if key == 'o':
+            if key == "o":
                 btn.setChecked(True)
             self.group_raw_marker_common.addButton(btn, i)
             dp_shape_row.addWidget(btn)
@@ -1029,14 +1173,24 @@ class CompareDesignSettingsPanel(QWidget):
         self.graph_bg_toggle_btn.setFixedSize(28, 24)
         self.graph_bg_toggle_btn.setFlat(True)
         self.graph_bg_toggle_btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.graph_bg_toggle_btn.setStyleSheet("QPushButton { color: #606266; font-size: 11px; }")
+        self.graph_bg_toggle_btn.setStyleSheet(
+            "QPushButton { color: #606266; font-size: 11px; }"
+        )
         graph_header_layout.addWidget(self.graph_bg_toggle_btn)
         graph_header_layout.addStretch()
         graph_group.addWidget(graph_header_row)
-        row3, self.sw_box_spines = self._create_toggle_row("사방 테두리", default_checked=self._is_normalized)
-        row4, self.sw_show_grid = self._create_toggle_row("배경 실선(Grid)", default_checked=self._is_normalized)
-        row_y_rot, self.sw_y_label_rotation = self._create_toggle_row("Y축 라벨 눕히기", default_checked=False)
-        self.sw_y_label_rotation.setToolTip("Y축 글자를 90도 눕혀 표시합니다. 끄면 똑바로 세웁니다.")
+        row3, self.sw_box_spines = self._create_toggle_row(
+            "사방 테두리", default_checked=self._is_normalized
+        )
+        row4, self.sw_show_grid = self._create_toggle_row(
+            "배경 실선(Grid)", default_checked=self._is_normalized
+        )
+        row_y_rot, self.sw_y_label_rotation = self._create_toggle_row(
+            "Y축 라벨 눕히기", default_checked=False
+        )
+        self.sw_y_label_rotation.setToolTip(
+            "Y축 글자를 90도 눕혀 표시합니다. 끄면 똑바로 세웁니다."
+        )
         graph_group.addLayout(row3)
         graph_group.addLayout(row4)
         graph_group.addLayout(row_y_rot)
@@ -1050,16 +1204,28 @@ class CompareDesignSettingsPanel(QWidget):
         graph_content_cmp_layout = QVBoxLayout(graph_content_cmp)
         graph_content_cmp_layout.setContentsMargins(0, 4, 0, 0)
         graph_content_cmp_layout.setSpacing(10)
-        row_unit, self.sw_show_axis_units = self._create_toggle_row("눈금 단위", default_checked=False)
-        self.sw_show_axis_units.setToolTip("ON 시 X·Y축 이름 뒤에 (Hz) 등 눈금 단위 표시")
+        row_unit, self.sw_show_axis_units = self._create_toggle_row(
+            "눈금 단위", default_checked=False
+        )
+        self.sw_show_axis_units.setToolTip(
+            "ON 시 X·Y축 이름 뒤에 (Hz) 등 눈금 단위 표시"
+        )
         self.axis_units_row_widget = QWidget()
         self.axis_units_row_widget.setLayout(row_unit)
         self.axis_units_row_widget.setContentsMargins(0, 0, 0, 0)
         row_unit.setContentsMargins(0, 0, 0, 0)
-        row_minor, self.sw_show_minor_ticks = self._create_toggle_row("세부 눈금 표시", default_checked=True)
-        self.sw_show_minor_ticks.setToolTip("ON 시 주 눈금 사이에 세부 눈금을 표시합니다.")
-        row_axis, self.sw_axis_position_swap = self._create_toggle_row("축·눈금 위치 반전", default_checked=False)
-        self.sw_axis_position_swap.setToolTip("Praat에서 아래/왼쪽, 수학에서 위/오른쪽에 축과 눈금을 표시합니다.")
+        row_minor, self.sw_show_minor_ticks = self._create_toggle_row(
+            "세부 눈금 표시", default_checked=True
+        )
+        self.sw_show_minor_ticks.setToolTip(
+            "ON 시 주 눈금 사이에 세부 눈금을 표시합니다."
+        )
+        row_axis, self.sw_axis_position_swap = self._create_toggle_row(
+            "축·눈금 위치 반전", default_checked=False
+        )
+        self.sw_axis_position_swap.setToolTip(
+            "Praat에서 아래/왼쪽, 수학에서 위/오른쪽에 축과 눈금을 표시합니다."
+        )
         row_axis.setContentsMargins(0, 0, 0, 0)
         self.axis_position_swap_row_widget = QWidget()
         self.axis_position_swap_row_widget.setContentsMargins(0, 0, 0, 0)
@@ -1109,7 +1275,9 @@ class CompareDesignSettingsPanel(QWidget):
         scroll_content = QWidget()
         scroll_content.setStyleSheet("QWidget { background-color: white; }")
         scroll_content.setMaximumWidth(260)
-        scroll_content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        scroll_content.setSizePolicy(
+            QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+        )
         layout = QVBoxLayout(scroll_content)
         layout.setContentsMargins(*lc.MARGIN_DOCK_CONTENTS)
         layout.setSpacing(14)
@@ -1128,7 +1296,9 @@ class CompareDesignSettingsPanel(QWidget):
         self.sub_tabs.tabBar().setElideMode(Qt.TextElideMode.ElideRight)
 
         # 도크 폭 내 수용: 탭 너비 고정(두 탭 합쳐 도크를 넘지 않도록), 말줄임·툴팁으로 전체 이름 표시
-        _tab_width_px = 100  # 탭 하나당 고정 너비; 2탭 합 200px로 마진 내 가용 폭에 맞춤
+        _tab_width_px = (
+            100  # 탭 하나당 고정 너비; 2탭 합 200px로 마진 내 가용 폭에 맞춤
+        )
         self.sub_tabs.setStyleSheet(f"""
             QTabWidget::pane {{ border-top: 2px solid #E4E7ED; background: white; }}
             QTabBar::tab {{
@@ -1140,11 +1310,17 @@ class CompareDesignSettingsPanel(QWidget):
         """)
 
         # Blue (기준) 탭: 텍스트 및 선 디폴트 Blue(#1976D2), 실선('-')
-        self.tab_blue, self.ctrl_blue = self._build_individual_tab('#1976D2', '-', 'blue')
+        self.tab_blue, self.ctrl_blue = self._build_individual_tab(
+            "#1976D2", "-", "blue"
+        )
         # Red (비교) 탭: 텍스트 및 선 디폴트 Red(#E64A19), 긴 점선('---')
-        self.tab_red, self.ctrl_red = self._build_individual_tab('#E64A19', '---', 'red')
+        self.tab_red, self.ctrl_red = self._build_individual_tab(
+            "#E64A19", "---", "red"
+        )
 
-        idx_blue = self.sub_tabs.addTab(self.tab_blue, strip_gichan_prefix(self.name_blue))
+        idx_blue = self.sub_tabs.addTab(
+            self.tab_blue, strip_gichan_prefix(self.name_blue)
+        )
         self.sub_tabs.setTabToolTip(idx_blue, self.name_blue)
 
         idx_red = self.sub_tabs.addTab(self.tab_red, strip_gichan_prefix(self.name_red))
@@ -1162,7 +1338,9 @@ class CompareDesignSettingsPanel(QWidget):
         # [ 하단 초기화 버튼 ]
         # ------------------------------------------------
         bottom_container = QWidget()
-        bottom_container.setStyleSheet("background-color: white; border-top: 1px solid #E4E7ED;")
+        bottom_container.setStyleSheet(
+            "background-color: white; border-top: 1px solid #E4E7ED;"
+        )
         bottom_layout = QHBoxLayout(bottom_container)
         bottom_layout.setContentsMargins(12, 10, 12, 10)
 
@@ -1183,34 +1361,55 @@ class CompareDesignSettingsPanel(QWidget):
         main_layout.addWidget(bottom_container)
 
     def _connect_signals(self):
-        for sw in [self.sw_show_raw, self.sw_show_centroid, self.sw_show_axis_units, self.sw_axis_position_swap, self.sw_y_label_rotation, self.sw_box_spines, self.sw_show_grid, self.sw_show_minor_ticks]:
+        for sw in [
+            self.sw_show_raw,
+            self.sw_show_centroid,
+            self.sw_show_axis_units,
+            self.sw_axis_position_swap,
+            self.sw_y_label_rotation,
+            self.sw_box_spines,
+            self.sw_show_grid,
+            self.sw_show_minor_ticks,
+        ]:
             sw.toggled.connect(self._on_setting_changed)
         self.group_font_style_common.buttonToggled.connect(self._on_setting_changed)
         self.group_raw_marker_common.buttonToggled.connect(self._on_setting_changed)
 
         for ctrl in [self.ctrl_blue, self.ctrl_red]:
-            ctrl['combo_lbl_size'].currentTextChanged.connect(self._on_setting_changed)
-            ctrl['btn_bold'].toggled.connect(self._on_setting_changed)
-            ctrl['btn_italic'].toggled.connect(self._on_setting_changed)
-            ctrl['group_centroid_marker'].buttonToggled.connect(self._on_setting_changed)
-            ctrl['group_ell_thick'].buttonToggled.connect(self._on_setting_changed)
-            ctrl['group_ell_style'].buttonToggled.connect(self._on_setting_changed)
-            ctrl['lbl_color_picker'].color_changed.connect(self._on_setting_changed)
-            ctrl['ell_line_picker'].color_changed.connect(self._on_setting_changed)
-            ctrl['ell_fill_picker'].color_changed.connect(self._on_setting_changed)
-        self.ctrl_blue['ell_line_picker'].color_changed.connect(self._update_compare_tab_text_colors)
-        self.ctrl_red['ell_line_picker'].color_changed.connect(self._update_compare_tab_text_colors)
+            ctrl["combo_lbl_size"].currentTextChanged.connect(self._on_setting_changed)
+            ctrl["btn_bold"].toggled.connect(self._on_setting_changed)
+            ctrl["btn_italic"].toggled.connect(self._on_setting_changed)
+            ctrl["group_centroid_marker"].buttonToggled.connect(
+                self._on_setting_changed
+            )
+            ctrl["group_ell_thick"].buttonToggled.connect(self._on_setting_changed)
+            ctrl["group_ell_style"].buttonToggled.connect(self._on_setting_changed)
+            ctrl["lbl_color_picker"].color_changed.connect(self._on_setting_changed)
+            ctrl["ell_line_picker"].color_changed.connect(self._on_setting_changed)
+            ctrl["ell_fill_picker"].color_changed.connect(self._on_setting_changed)
+        self.ctrl_blue["ell_line_picker"].color_changed.connect(
+            self._update_compare_tab_text_colors
+        )
+        self.ctrl_red["ell_line_picker"].color_changed.connect(
+            self._update_compare_tab_text_colors
+        )
 
     def _update_compare_tab_text_colors(self):
         """파일 탭 파일명 텍스트 색을 각 시리즈의 신뢰타원 선 색과 맞춤."""
         bar = self.sub_tabs.tabBar()
+
         def to_qcolor(raw, fallback):
-            if not raw or str(raw).lower() == 'transparent':
+            if not raw or str(raw).lower() == "transparent":
                 return QColor(fallback)
             c = QColor(raw)
             return c if c.isValid() else QColor(fallback)
-        bar.setTabTextColor(0, to_qcolor(self.ctrl_blue['ell_line_picker'].current_color, '#1976D2'))
-        bar.setTabTextColor(1, to_qcolor(self.ctrl_red['ell_line_picker'].current_color, '#E64A19'))
+
+        bar.setTabTextColor(
+            0, to_qcolor(self.ctrl_blue["ell_line_picker"].current_color, "#1976D2")
+        )
+        bar.setTabTextColor(
+            1, to_qcolor(self.ctrl_red["ell_line_picker"].current_color, "#E64A19")
+        )
 
     def _on_setting_changed(self, *args):
         if self._is_loading:
@@ -1242,76 +1441,81 @@ class CompareDesignSettingsPanel(QWidget):
         self.group_raw_marker_common.button(0).setChecked(True)
 
         # Blue 초기화
-        self.ctrl_blue['lbl_color_picker'].set_color('#1976D2')
-        self.ctrl_blue['combo_lbl_size'].setCurrentText("20")
-        self.ctrl_blue['btn_bold'].setChecked(True)
-        self.ctrl_blue['btn_italic'].setChecked(False)
-        self.ctrl_blue['group_centroid_marker'].button(0).setChecked(True)
-        self.ctrl_blue['group_ell_thick'].button(1).setChecked(True)
-        self.ctrl_blue['group_ell_style'].button(0).setChecked(True)  # 실선
-        self.ctrl_blue['ell_line_picker'].set_color('#1976D2')
-        self.ctrl_blue['ell_fill_picker'].set_color('transparent')
+        self.ctrl_blue["lbl_color_picker"].set_color("#1976D2")
+        self.ctrl_blue["combo_lbl_size"].setCurrentText("20")
+        self.ctrl_blue["btn_bold"].setChecked(True)
+        self.ctrl_blue["btn_italic"].setChecked(False)
+        self.ctrl_blue["group_centroid_marker"].button(0).setChecked(True)
+        self.ctrl_blue["group_ell_thick"].button(1).setChecked(True)
+        self.ctrl_blue["group_ell_style"].button(0).setChecked(True)  # 실선
+        self.ctrl_blue["ell_line_picker"].set_color("#1976D2")
+        self.ctrl_blue["ell_fill_picker"].set_color("transparent")
 
         # Red 초기화
-        self.ctrl_red['lbl_color_picker'].set_color('#E64A19')
-        self.ctrl_red['combo_lbl_size'].setCurrentText("20")
-        self.ctrl_red['btn_bold'].setChecked(True)
-        self.ctrl_red['btn_italic'].setChecked(False)
-        self.ctrl_red['group_centroid_marker'].button(0).setChecked(True)
-        self.ctrl_red['group_ell_thick'].button(1).setChecked(True)
-        self.ctrl_red['group_ell_style'].button(1).setChecked(True)  # 긴 점선
-        self.ctrl_red['ell_line_picker'].set_color('#E64A19')
-        self.ctrl_red['ell_fill_picker'].set_color('transparent')
+        self.ctrl_red["lbl_color_picker"].set_color("#E64A19")
+        self.ctrl_red["combo_lbl_size"].setCurrentText("20")
+        self.ctrl_red["btn_bold"].setChecked(True)
+        self.ctrl_red["btn_italic"].setChecked(False)
+        self.ctrl_red["group_centroid_marker"].button(0).setChecked(True)
+        self.ctrl_red["group_ell_thick"].button(1).setChecked(True)
+        self.ctrl_red["group_ell_style"].button(1).setChecked(True)  # 긴 점선
+        self.ctrl_red["ell_line_picker"].set_color("#E64A19")
+        self.ctrl_red["ell_fill_picker"].set_color("transparent")
 
         self._is_loading = False
         self._on_setting_changed()
 
     def _parse_individual_settings(self, ctrl):
         thick_map = {0: 0.5, 1: 1.0, 2: 2.0}
-        style_map = {0: '-', 1: '---', 2: '--'}  # 실선, 긴 점선, 짧은 점선
-        marker_map = {0: 'o', 1: 's', 2: '^', 3: 'D'}
+        style_map = {0: "-", 1: "---", 2: "--"}  # 실선, 긴 점선, 짧은 점선
+        marker_map = {0: "o", 1: "s", 2: "^", 3: "D"}
 
-        line_color = ctrl['ell_line_picker'].current_color
-        fill_color = ctrl['ell_fill_picker'].current_color
+        line_color = ctrl["ell_line_picker"].current_color
+        fill_color = ctrl["ell_fill_picker"].current_color
 
         # ell_style: checkedId()가 -1이면(토글 순간 등) checkedButton()으로 보정
-        g_ell = ctrl['group_ell_style']
+        g_ell = ctrl["group_ell_style"]
         style_id = g_ell.checkedId()
         if style_id < 0:
             btn = g_ell.checkedButton()
             style_id = g_ell.id(btn) if btn else 0
-        ell_style = style_map.get(style_id, '-')
+        ell_style = style_map.get(style_id, "-")
 
         return {
-            'lbl_color': ctrl['lbl_color_picker'].current_color,
-            'lbl_size': int(ctrl['combo_lbl_size'].currentText()),
-            'lbl_bold': ctrl['btn_bold'].isChecked(),
-            'lbl_italic': ctrl['btn_italic'].isChecked(),
-            'centroid_marker': marker_map.get(ctrl['group_centroid_marker'].checkedId(), 'o'),
-
-            'ell_thick': thick_map.get(ctrl['group_ell_thick'].checkedId(), 1.0),
-            'ell_style': ell_style,
-            'ell_color': line_color if line_color != 'transparent' else None,
-            'ell_fill_color': fill_color if fill_color != 'transparent' else None,
+            "lbl_color": ctrl["lbl_color_picker"].current_color,
+            "lbl_size": int(ctrl["combo_lbl_size"].currentText()),
+            "lbl_bold": ctrl["btn_bold"].isChecked(),
+            "lbl_italic": ctrl["btn_italic"].isChecked(),
+            "centroid_marker": marker_map.get(
+                ctrl["group_centroid_marker"].checkedId(), "o"
+            ),
+            "ell_thick": thick_map.get(ctrl["group_ell_thick"].checkedId(), 1.0),
+            "ell_style": ell_style,
+            "ell_color": line_color if line_color != "transparent" else None,
+            "ell_fill_color": fill_color if fill_color != "transparent" else None,
         }
 
     def get_current_settings(self):
-        font_style = 'serif' if self.group_font_style_common.checkedId() == 0 else 'sans'
+        font_style = (
+            "serif" if self.group_font_style_common.checkedId() == 0 else "sans"
+        )
         raw_marker_id = self.group_raw_marker_common.checkedId()
-        raw_marker = ['o', 'x', 'a'][raw_marker_id] if 0 <= raw_marker_id <= 2 else 'o'
+        raw_marker = ["o", "x", "a"][raw_marker_id] if 0 <= raw_marker_id <= 2 else "o"
         return {
-            'common': {
-                'show_raw': self.sw_show_raw.isChecked(),
-                'show_centroid': self.sw_show_centroid.isChecked(),
-                'raw_marker': raw_marker,
-                'show_axis_units': self.sw_show_axis_units.isChecked() if not self._is_normalized else False,
-                'axis_position_swap': self.sw_axis_position_swap.isChecked(),
-                'y_label_rotation': self.sw_y_label_rotation.isChecked(),
-                'box_spines': self.sw_box_spines.isChecked(),
-                'show_grid': self.sw_show_grid.isChecked(),
-                'show_minor_ticks': self.sw_show_minor_ticks.isChecked(),
-                'font_style': font_style,
+            "common": {
+                "show_raw": self.sw_show_raw.isChecked(),
+                "show_centroid": self.sw_show_centroid.isChecked(),
+                "raw_marker": raw_marker,
+                "show_axis_units": self.sw_show_axis_units.isChecked()
+                if not self._is_normalized
+                else False,
+                "axis_position_swap": self.sw_axis_position_swap.isChecked(),
+                "y_label_rotation": self.sw_y_label_rotation.isChecked(),
+                "box_spines": self.sw_box_spines.isChecked(),
+                "show_grid": self.sw_show_grid.isChecked(),
+                "show_minor_ticks": self.sw_show_minor_ticks.isChecked(),
+                "font_style": font_style,
             },
-            'blue': self._parse_individual_settings(self.ctrl_blue),
-            'red': self._parse_individual_settings(self.ctrl_red)
+            "blue": self._parse_individual_settings(self.ctrl_blue),
+            "red": self._parse_individual_settings(self.ctrl_red),
         }

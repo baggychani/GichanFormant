@@ -27,7 +27,7 @@ class LabelMoveTool:
         self._pick_radius_px = 18
         self.hovered_label = None
         self.highlight_rect = None
-        self.highlight_color = '#E6A23C'
+        self.highlight_color = "#E6A23C"
         self.cursor_changed = False
 
         self.drag_preview_text = None
@@ -52,12 +52,14 @@ class LabelMoveTool:
 
     def set_highlight_color(self, color):
         """다중 플롯: 네모 테두리/강조 색을 해당 파일 신뢰타원 선 색으로 설정."""
-        if color and str(color).lower() != 'transparent':
+        if color and str(color).lower() != "transparent":
             self.highlight_color = color
         else:
-            self.highlight_color = '#E6A23C'
+            self.highlight_color = "#E6A23C"
 
-    def set_context(self, canvas, ax, label_data, highlight_color=None, label_text_artists=None):
+    def set_context(
+        self, canvas, ax, label_data, highlight_color=None, label_text_artists=None
+    ):
         self.canvas = canvas
         self.ax = ax
         self.label_data = label_data if label_data else []
@@ -65,7 +67,7 @@ class LabelMoveTool:
         if highlight_color is not None:
             self.set_highlight_color(highlight_color)
         else:
-            self.highlight_color = '#E6A23C'
+            self.highlight_color = "#E6A23C"
         self._clear_highlight()
         self._remove_drag_preview()
         if self.cursor_changed and self.canvas:
@@ -76,12 +78,14 @@ class LabelMoveTool:
         """주어진 라벨 데이터(lb)에 해당하는 실제 Text 아티스트 객체를 찾아 반환합니다."""
         if not self.label_text_artists or not self.label_data:
             return None
-        lx, ly = lb.get('lx'), lb.get('ly')
-        v = lb.get('vowel')
+        lx, ly = lb.get("lx"), lb.get("ly")
+        v = lb.get("vowel")
         for i, candidate in enumerate(self.label_data):
-            if (candidate.get('vowel') == v and
-                    abs((candidate.get('lx') or 0) - (lx or 0)) < 1e-9 and
-                    abs((candidate.get('ly') or 0) - (ly or 0)) < 1e-9):
+            if (
+                candidate.get("vowel") == v
+                and abs((candidate.get("lx") or 0) - (lx or 0)) < 1e-9
+                and abs((candidate.get("ly") or 0) - (ly or 0)) < 1e-9
+            ):
                 if i < len(self.label_text_artists):
                     return self.label_text_artists[i]
         return None
@@ -103,7 +107,7 @@ class LabelMoveTool:
         artist = self._get_artist_for_label(lb)
         if not artist:
             return
-        if not self.canvas or not getattr(self.canvas, 'renderer', None):
+        if not self.canvas or not getattr(self.canvas, "renderer", None):
             return
 
         try:
@@ -122,9 +126,15 @@ class LabelMoveTool:
             pad_x, pad_y = w * 0.1, h * 0.1
 
             self.highlight_rect = mpatches.Rectangle(
-                (x0 - pad_x, y0 - pad_y), w + 2 * pad_x, h + 2 * pad_y,
-                linewidth=2, edgecolor=self.highlight_color, facecolor='none', alpha=0.9, zorder=100,
-                clip_on=False
+                (x0 - pad_x, y0 - pad_y),
+                w + 2 * pad_x,
+                h + 2 * pad_y,
+                linewidth=2,
+                edgecolor=self.highlight_color,
+                facecolor="none",
+                alpha=0.9,
+                zorder=100,
+                clip_on=False,
             )
             self.ax.add_patch(self.highlight_rect)
             if self.canvas:
@@ -168,26 +178,28 @@ class LabelMoveTool:
             self._dragged_original_alpha = artist.get_alpha()
             artist.set_alpha(0.2)
 
-        lx, ly = lb['lx'], lb['ly']
+        lx, ly = lb["lx"], lb["ly"]
 
         kw = {
-            'fontsize': int(lb.get('fontsize', 14)) if lb.get('fontsize') is not None else 14,
-            'fontweight': 'bold' if lb.get('lbl_bold', True) else 'normal',
-            'fontstyle': 'italic' if lb.get('lbl_italic', False) else 'normal',
-            'color': lb.get('lbl_color', '#E64A19'),
-            'ha': lb.get('ha', 'left'),
-            'va': lb.get('va', 'bottom'),
-            'zorder': 200,  # 드래그 중인 텍스트는 무조건 맨 위로
-            'clip_on': False,
+            "fontsize": int(lb.get("fontsize", 14))
+            if lb.get("fontsize") is not None
+            else 14,
+            "fontweight": "bold" if lb.get("lbl_bold", True) else "normal",
+            "fontstyle": "italic" if lb.get("lbl_italic", False) else "normal",
+            "color": lb.get("lbl_color", "#E64A19"),
+            "ha": lb.get("ha", "left"),
+            "va": lb.get("va", "bottom"),
+            "zorder": 200,  # 드래그 중인 텍스트는 무조건 맨 위로
+            "clip_on": False,
         }
 
-        self.drag_preview_text = self.ax.text(lx, ly, lb.get('vowel', '?'), **kw)
+        self.drag_preview_text = self.ax.text(lx, ly, lb.get("vowel", "?"), **kw)
 
         # 원본 라벨에 있던 속성(테두리, 폰트 패밀리)을 프리뷰에도 복사
         if artist:
             # 1. 폰트 종류(세리프/산세리프 및 다국어 폰트) 복사 추가!
             self.drag_preview_text.set_fontfamily(artist.get_fontfamily())
-            
+
             # 2. 흰색 테두리(PathEffect) 복사
             if artist.get_path_effects():
                 self.drag_preview_text.set_path_effects(artist.get_path_effects())
@@ -208,7 +220,11 @@ class LabelMoveTool:
         pad_px = 3
         try:
             # 1) bbox 기반: label_text_artists가 있으면 픽셀 bbox 안에 들어오는지 검사
-            if self.label_text_artists and self.canvas and getattr(self.canvas, 'renderer', None):
+            if (
+                self.label_text_artists
+                and self.canvas
+                and getattr(self.canvas, "renderer", None)
+            ):
                 renderer = self.canvas.renderer
                 for i, artist in enumerate(self.label_text_artists):
                     if i >= len(self.label_data):
@@ -216,14 +232,20 @@ class LabelMoveTool:
                     try:
                         bbox = artist.get_window_extent(renderer)
                         # display 좌표: (x0,y0)~(x1,y1), 패딩 적용
-                        x0, x1 = min(bbox.x0, bbox.x1) - pad_px, max(bbox.x0, bbox.x1) + pad_px
-                        y0, y1 = min(bbox.y0, bbox.y1) - pad_px, max(bbox.y0, bbox.y1) + pad_px
+                        x0, x1 = (
+                            min(bbox.x0, bbox.x1) - pad_px,
+                            max(bbox.x0, bbox.x1) + pad_px,
+                        )
+                        y0, y1 = (
+                            min(bbox.y0, bbox.y1) - pad_px,
+                            max(bbox.y0, bbox.y1) + pad_px,
+                        )
                         if x0 <= x_px <= x1 and y0 <= y_px <= y1:
                             return self.label_data[i]
                     except Exception:
                         continue
             # 2) 폴백: (lx, ly) 한 점과의 거리
-            xy_data = np.array([[lb['lx'], lb['ly']] for lb in self.label_data])
+            xy_data = np.array([[lb["lx"], lb["ly"]] for lb in self.label_data])
             xy_display = self.ax.transData.transform(xy_data)
             dx = xy_display[:, 0] - x_px
             dy = xy_display[:, 1] - y_px
@@ -258,9 +280,15 @@ class LabelMoveTool:
 
     def _connect(self):
         if self.canvas:
-            self.cid_press = self.canvas.mpl_connect('button_press_event', self._on_press)
-            self.cid_motion = self.canvas.mpl_connect('motion_notify_event', self._on_motion)
-            self.cid_release = self.canvas.mpl_connect('button_release_event', self._on_release)
+            self.cid_press = self.canvas.mpl_connect(
+                "button_press_event", self._on_press
+            )
+            self.cid_motion = self.canvas.mpl_connect(
+                "motion_notify_event", self._on_motion
+            )
+            self.cid_release = self.canvas.mpl_connect(
+                "button_release_event", self._on_release
+            )
 
     def detach(self):
         if self.canvas:
@@ -282,8 +310,10 @@ class LabelMoveTool:
         # 우클릭(Matplotlib button 3) 원상복귀: 사용자 오프셋 제거 후 refresh로 자동 배치 복귀
         if event.button == 3:
             if self.hovered_label is not None:
-                vowel = (self.hovered_label or {}).get('vowel')
-                if vowel is not None and callable(getattr(self, 'on_offset_cleared', None)):
+                vowel = (self.hovered_label or {}).get("vowel")
+                if vowel is not None and callable(
+                    getattr(self, "on_offset_cleared", None)
+                ):
                     self.on_offset_cleared(vowel)
                 self._clear_highlight()
                 self.hovered_label = None
@@ -315,9 +345,9 @@ class LabelMoveTool:
             return
 
         if self.dragging is not None:
-            cx, cy = self.dragging['cx'], self.dragging['cy']
+            cx, cy = self.dragging["cx"], self.dragging["cy"]
             lx, ly = self._clamp_to_radius_px(cx, cy, xdata, ydata)
-            self.dragging['lx'], self.dragging['ly'] = lx, ly
+            self.dragging["lx"], self.dragging["ly"] = lx, ly
             self._update_drag_preview_position(lx, ly)
             return
 
@@ -341,7 +371,7 @@ class LabelMoveTool:
             return
         if self.dragging is not None:
             self._remove_drag_preview()
-            if hasattr(self, 'on_offset_saved') and callable(self.on_offset_saved):
+            if hasattr(self, "on_offset_saved") and callable(self.on_offset_saved):
                 self.on_offset_saved(self.dragging)
             self.dragging = None
             if self.canvas:

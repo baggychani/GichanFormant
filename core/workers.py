@@ -7,11 +7,21 @@ from PyQt6.QtCore import QThread, pyqtSignal
 
 class BatchSaveWorker(QThread):
     """일괄 저장을 백그라운드 스레드에서 수행하여 GUI 멈춤 방지."""
-    progress = pyqtSignal(int, int)   # current, total
+
+    progress = pyqtSignal(int, int)  # current, total
     finished_with_count = pyqtSignal(int)
     log_error = pyqtSignal(str)
 
-    def __init__(self, save_dir, plot_data_list, plot_engine, plot_params, ranges, ds_settings, img_format):
+    def __init__(
+        self,
+        save_dir,
+        plot_data_list,
+        plot_engine,
+        plot_params,
+        ranges,
+        ds_settings,
+        img_format,
+    ):
         super().__init__()
         self.save_dir = save_dir
         self.plot_data_list = list(plot_data_list)
@@ -24,28 +34,36 @@ class BatchSaveWorker(QThread):
 
     def run(self):
         from matplotlib.figure import Figure
+
         success_count = 0
         total = len(self.plot_data_list)
-        outlier_mode = self.plot_params.get('outlier_mode')
+        outlier_mode = self.plot_params.get("outlier_mode")
         outlier_suffix = ""
-        if outlier_mode == '1sigma':
+        if outlier_mode == "1sigma":
             outlier_suffix = "_이상치 제거 1σ"
-        elif outlier_mode == '2sigma':
+        elif outlier_mode == "2sigma":
             outlier_suffix = "_이상치 제거 2σ"
 
         for i, data in enumerate(self.plot_data_list):
-            fname = data['name']
+            fname = data["name"]
             base_name = os.path.splitext(fname)[0]
             save_name = f"{base_name}{outlier_suffix}.{self.img_format}"
             save_path = os.path.join(self.save_dir, save_name)
             try:
                 temp_fig = Figure(figsize=(6.5, 6.5), dpi=300)
-                self.plot_engine.draw_plot(temp_fig, data['df'], self.plot_params,
-                                          manual_ranges=self.ranges, design_settings=self.ds_settings)
-                if self.img_format.lower() == 'png':
-                    temp_fig.savefig(save_path, format='png', dpi=300, transparent=True)
+                self.plot_engine.draw_plot(
+                    temp_fig,
+                    data["df"],
+                    self.plot_params,
+                    manual_ranges=self.ranges,
+                    design_settings=self.ds_settings,
+                )
+                if self.img_format.lower() == "png":
+                    temp_fig.savefig(save_path, format="png", dpi=300, transparent=True)
                 else:
-                    temp_fig.savefig(save_path, format=self.img_format, facecolor='white')
+                    temp_fig.savefig(
+                        save_path, format=self.img_format, facecolor="white"
+                    )
                 success_count += 1
             except Exception as e:
                 traceback.print_exc()

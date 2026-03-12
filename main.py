@@ -15,7 +15,7 @@ if __name__ == "__main__":
         import ctypes
 
         try:
-            myappid = 'gichan.formant.app'
+            myappid = "gichan.formant.app"
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except Exception:
             pass
@@ -29,6 +29,7 @@ if __name__ == "__main__":
     # 전역 앱 레벨에서 물리 아이콘 경로 적용
     try:
         from PyQt6.QtGui import QIcon
+
         icon_path = icon_utils.get_icon_path()
         if icon_path:
             app.setWindowIcon(QIcon(icon_path))

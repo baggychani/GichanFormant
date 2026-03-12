@@ -3,21 +3,47 @@
 import base64
 import inspect
 import platform
-from PyQt6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QGridLayout, QLabel, QPushButton, QComboBox,
-                             QLineEdit, QDialog, QButtonGroup,
-                             QMessageBox, QDockWidget, QApplication, QFrame,
-                             QSizePolicy, QFormLayout, QStyle, QTabWidget)
+from PyQt6.QtWidgets import (
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QComboBox,
+    QLineEdit,
+    QDialog,
+    QButtonGroup,
+    QMessageBox,
+    QDockWidget,
+    QApplication,
+    QFrame,
+    QSizePolicy,
+    QFormLayout,
+    QStyle,
+    QTabWidget,
+)
 from PyQt6.QtCore import Qt, QTimer, QObject, QEvent
 
 
 class TabBarWheelBlocker(QObject):
     """탭 위에서 마우스 휠로 탭이 바뀌지 않도록 휠 이벤트를 흡수합니다."""
+
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.Wheel:
             return True
         return False
-from PyQt6.QtGui import QFont, QIcon, QPixmap, QShortcut, QKeySequence, QRegularExpressionValidator
+
+
+from PyQt6.QtGui import (
+    QFont,
+    QIcon,
+    QPixmap,
+    QShortcut,
+    QKeySequence,
+    QRegularExpressionValidator,
+)
 from PyQt6.QtCore import QRegularExpression
 from .canvas_fixed import FixedFigureCanvas
 
@@ -31,23 +57,45 @@ from .layer_dock import LayerDockWidget
 from . import layout_constants as layout
 from .display_utils import format_file_label
 
+
 class RangeInputFilter(QObject):
     """좌표축 범위 입력란: 숫자·소수점·마이너스 외 키는 입력되지 않게 막고 포커스 해제."""
-    ALLOWED_KEYS = frozenset({
-        Qt.Key.Key_0, Qt.Key.Key_1, Qt.Key.Key_2, Qt.Key.Key_3, Qt.Key.Key_4,
-        Qt.Key.Key_5, Qt.Key.Key_6, Qt.Key.Key_7, Qt.Key.Key_8, Qt.Key.Key_9,
-        Qt.Key.Key_Period, Qt.Key.Key_Minus,
-        Qt.Key.Key_Backspace, Qt.Key.Key_Delete,
-        Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Home, Qt.Key.Key_End,
-        Qt.Key.Key_Tab, Qt.Key.Key_Return, Qt.Key.Key_Enter,
-    })
+
+    ALLOWED_KEYS = frozenset(
+        {
+            Qt.Key.Key_0,
+            Qt.Key.Key_1,
+            Qt.Key.Key_2,
+            Qt.Key.Key_3,
+            Qt.Key.Key_4,
+            Qt.Key.Key_5,
+            Qt.Key.Key_6,
+            Qt.Key.Key_7,
+            Qt.Key.Key_8,
+            Qt.Key.Key_9,
+            Qt.Key.Key_Period,
+            Qt.Key.Key_Minus,
+            Qt.Key.Key_Backspace,
+            Qt.Key.Key_Delete,
+            Qt.Key.Key_Left,
+            Qt.Key.Key_Right,
+            Qt.Key.Key_Home,
+            Qt.Key.Key_End,
+            Qt.Key.Key_Tab,
+            Qt.Key.Key_Return,
+            Qt.Key.Key_Enter,
+        }
+    )
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
             key = event.key()
             mods = event.modifiers()
             if mods & Qt.KeyboardModifier.ControlModifier and key in (
-                Qt.Key.Key_A, Qt.Key.Key_C, Qt.Key.Key_V, Qt.Key.Key_X
+                Qt.Key.Key_A,
+                Qt.Key.Key_C,
+                Qt.Key.Key_V,
+                Qt.Key.Key_X,
             ):
                 return False
             if key in self.ALLOWED_KEYS:
@@ -73,11 +121,22 @@ class SmartDockWidget(QDockWidget):
 class BatchSaveDialog(QDialog):
     """일괄 저장 설정 다이얼로그"""
 
-    def __init__(self, parent, controller, current_ranges, f1_unit, f2_unit, x_axis_label, current_sigma):
+    def __init__(
+        self,
+        parent,
+        controller,
+        current_ranges,
+        f1_unit,
+        f2_unit,
+        x_axis_label,
+        current_sigma,
+    ):
         super().__init__(parent)
         self.controller = controller
         self.setWindowTitle("일괄 저장 설정")
-        self.setFixedSize(config.DIALOG_BATCH_SAVE_WIDTH_PX, config.DIALOG_BATCH_SAVE_HEIGHT_PX)
+        self.setFixedSize(
+            config.DIALOG_BATCH_SAVE_WIDTH_PX, config.DIALOG_BATCH_SAVE_HEIGHT_PX
+        )
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self.ui_font_name = parent.ui_font_name
@@ -109,10 +168,12 @@ class BatchSaveDialog(QDialog):
         form.setSpacing(15)
         form.setLabelAlignment(Qt.AlignmentFlag.AlignRight)
 
-        num_validator = QRegularExpressionValidator(QRegularExpression(r"^-?\d*\.?\d*$"))
+        num_validator = QRegularExpressionValidator(
+            QRegularExpression(r"^-?\d*\.?\d*$")
+        )
         f1_frame = QHBoxLayout()
-        self.ent_y_min = QLineEdit(ranges['y_min'])
-        self.ent_y_max = QLineEdit(ranges['y_max'])
+        self.ent_y_min = QLineEdit(ranges["y_min"])
+        self.ent_y_max = QLineEdit(ranges["y_max"])
         for le in (self.ent_y_min, self.ent_y_max):
             le.setFixedWidth(config.RANGE_EDIT_FIXED_WIDTH_PX)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -124,8 +185,8 @@ class BatchSaveDialog(QDialog):
         form.addRow(f"F1 ({f1_unit}):", f1_frame)
 
         f2_frame = QHBoxLayout()
-        self.ent_x_min = QLineEdit(ranges['x_min'])
-        self.ent_x_max = QLineEdit(ranges['x_max'])
+        self.ent_x_min = QLineEdit(ranges["x_min"])
+        self.ent_x_max = QLineEdit(ranges["x_max"])
         for le in (self.ent_x_min, self.ent_x_max):
             le.setFixedWidth(config.RANGE_EDIT_FIXED_WIDTH_PX)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -178,7 +239,9 @@ class BatchSaveDialog(QDialog):
             "QPushButton { border-left: none; border-right: none; }",
             "QPushButton { border-top-right-radius: 4px; border-bottom-right-radius: 4px; border-left: none; }",
         ]
-        for i, (text, val) in enumerate([("JPG", "jpg"), ("PNG", "png"), ("EPS", "eps")]):
+        for i, (text, val) in enumerate(
+            [("JPG", "jpg"), ("PNG", "png"), ("EPS", "eps")]
+        ):
             btn = QPushButton(text)
             btn.setCheckable(True)
             btn.setProperty("val", val)
@@ -193,7 +256,9 @@ class BatchSaveDialog(QDialog):
         # 폼 전체를 가운데 정렬하기 위해 컨테이너 위젯에 담아서 추가
         form_container = QWidget()
         form_container.setLayout(form)
-        form_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
+        form_container.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred
+        )
         main_layout.addWidget(form_container, alignment=Qt.AlignmentFlag.AlignHCenter)
         main_layout.addStretch()
 
@@ -207,7 +272,9 @@ class BatchSaveDialog(QDialog):
 
         btn_next = QPushButton("저장 실행")
         btn_next.setFixedSize(140, 38)
-        btn_next.setStyleSheet("background-color: #4CAF50; color: white; font-weight: bold; border-radius: 4px;")
+        btn_next.setStyleSheet(
+            "background-color: #4CAF50; color: white; font-weight: bold; border-radius: 4px;"
+        )
         btn_next.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         btn_next.setDefault(True)
         btn_next.clicked.connect(self.on_next)
@@ -220,8 +287,10 @@ class BatchSaveDialog(QDialog):
 
     def on_next(self):
         ranges = {
-            'y_min': self.ent_y_min.text(), 'y_max': self.ent_y_max.text(),
-            'x_min': self.ent_x_min.text(), 'x_max': self.ent_x_max.text()
+            "y_min": self.ent_y_min.text(),
+            "y_max": self.ent_y_max.text(),
+            "x_min": self.ent_x_min.text(),
+            "x_max": self.ent_x_max.text(),
         }
         sig_btn = self.sig_group.checkedButton()
         sigma = sig_btn.property("val") if sig_btn else "2.0"
@@ -231,12 +300,20 @@ class BatchSaveDialog(QDialog):
         self.accept()
 
         parent_popup = self.parent()
-        design_settings = parent_popup.design_settings if hasattr(parent_popup, 'design_settings') else None
+        design_settings = (
+            parent_popup.design_settings
+            if hasattr(parent_popup, "design_settings")
+            else None
+        )
 
         # main.py가 업데이트되기 전에도 튕기지 않도록 파라미터 유무를 안전하게 검사합니다.
-        sig_params = inspect.signature(self.controller.batch_download_with_options).parameters
-        if 'design_settings' in sig_params:
-            self.controller.batch_download_with_options(ranges, sigma, img_format, design_settings=design_settings)
+        sig_params = inspect.signature(
+            self.controller.batch_download_with_options
+        ).parameters
+        if "design_settings" in sig_params:
+            self.controller.batch_download_with_options(
+                ranges, sigma, img_format, design_settings=design_settings
+            )
         else:
             self.controller.batch_download_with_options(ranges, sigma, img_format)
 
@@ -244,7 +321,9 @@ class BatchSaveDialog(QDialog):
 class PlotPopup(QMainWindow):
     """메인 결과 시각화 창 (단일 도크 통합 탭 버전)"""
 
-    def __init__(self, parent, controller, figure, x_axis_label="F2", title="Plot Result"):
+    def __init__(
+        self, parent, controller, figure, x_axis_label="F2", title="Plot Result"
+    ):
         super().__init__()
 
         self.controller = controller
@@ -277,24 +356,35 @@ class PlotPopup(QMainWindow):
         self._plot_key = None
 
         data_list = self.plot_data_snapshot or self.controller.get_plot_data_list()
-        idx = self.current_idx if self.plot_data_snapshot is not None else self.controller.get_current_index()
+        idx = (
+            self.current_idx
+            if self.plot_data_snapshot is not None
+            else self.controller.get_current_index()
+        )
         current_data = data_list[idx]
-        self._update_window_title(current_data['name'])
+        self._update_window_title(current_data["name"])
 
         self.resize(layout.PLOT_WINDOW_WIDTH_PX, config.PLOT_WINDOW_HEIGHT_PX)
-        self.ui_font_name = config.UI_FONT_WINDOWS if platform.system() == "Windows" else config.UI_FONT_MAC
+        self.ui_font_name = (
+            config.UI_FONT_WINDOWS
+            if platform.system() == "Windows"
+            else config.UI_FONT_MAC
+        )
 
         self.setCorner(Qt.Corner.TopLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
         self.setCorner(Qt.Corner.BottomLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
         self.setCorner(Qt.Corner.TopRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
-        self.setCorner(Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
+        self.setCorner(
+            Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea
+        )
 
         self.setDockOptions(QMainWindow.DockOption.AnimatedDocks)
         self.setDockNestingEnabled(False)
 
         self._apply_pyqt6_icon()
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QMainWindow { background-color: #F5F7FA; }
             QWidget#CentralWidget { background-color: transparent; }
 
@@ -342,7 +432,9 @@ class PlotPopup(QMainWindow):
                 background: #EBEEF5;
                 color: #409EFF;
             }
-        """ % config.TAB_BAR_MIN_WIDTH_PX)
+        """
+            % config.TAB_BAR_MIN_WIDTH_PX
+        )
 
         self.central_widget = QWidget()
         self.central_widget.setObjectName("CentralWidget")
@@ -354,16 +446,25 @@ class PlotPopup(QMainWindow):
 
         self.sep_left = QFrame()
         self.sep_left.setFixedWidth(layout.SEPARATOR_WIDTH_PX)
-        self.sep_left.setStyleSheet("background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR)
+        self.sep_left.setStyleSheet(
+            "background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR
+        )
 
         self.sep_right = QFrame()
         self.sep_right.setFixedWidth(layout.SEPARATOR_WIDTH_PX)
-        self.sep_right.setStyleSheet("background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR)
+        self.sep_right.setStyleSheet(
+            "background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR
+        )
 
         canvas_container = QWidget()
         canvas_container.setStyleSheet("background-color: white;")
         central_layout = QVBoxLayout(canvas_container)
-        central_layout.setContentsMargins(config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX)
+        central_layout.setContentsMargins(
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+        )
         central_layout.setSpacing(4)
 
         # 상단 우측에 눈금자/라벨 이동 상태 인디케이터 박스 배치
@@ -371,7 +472,9 @@ class PlotPopup(QMainWindow):
         top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(0)
         top_row.addStretch()
-        self.tool_indicator = ToolStatusIndicator(canvas_container, ui_font_name=self.ui_font_name)
+        self.tool_indicator = ToolStatusIndicator(
+            canvas_container, ui_font_name=self.ui_font_name
+        )
         top_row.addWidget(self.tool_indicator, alignment=Qt.AlignmentFlag.AlignRight)
         central_layout.addLayout(top_row)
 
@@ -400,12 +503,18 @@ class PlotPopup(QMainWindow):
         except Exception:
             pass
 
-    def set_initial_plot_state(self, fixed_plot_params, plot_data_snapshot, current_idx):
+    def set_initial_plot_state(
+        self, fixed_plot_params, plot_data_snapshot, current_idx
+    ):
         """컨트롤러가 팝업을 연 직후 호출. 상태를 명시적으로 주입 (몽키 패칭 대신)."""
         self.fixed_plot_params = fixed_plot_params
         self.plot_data_snapshot = plot_data_snapshot
         self.current_idx = current_idx
-        if hasattr(self, 'btn_vowel_analysis') and plot_data_snapshot and len(plot_data_snapshot) >= 1:
+        if (
+            hasattr(self, "btn_vowel_analysis")
+            and plot_data_snapshot
+            and len(plot_data_snapshot) >= 1
+        ):
             self.btn_vowel_analysis.setEnabled(True)
 
     def set_draw_result(self, snapping_data, label_data, label_text_artists, plot_key):
@@ -426,18 +535,26 @@ class PlotPopup(QMainWindow):
 
     def _build_unified_dock(self):
         self.dock_widget = QDockWidget("도구 및 설정", self)
-        self.dock_widget.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.dock_widget.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
 
         self.dock_widget.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
 
         self.dock_container = QWidget()
         self.dock_container.setObjectName("DockContainer")
-        self.dock_container.setStyleSheet("#DockContainer { background-color: #FFFFFF; }")
+        self.dock_container.setStyleSheet(
+            "#DockContainer { background-color: #FFFFFF; }"
+        )
 
         self.dock_container.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self.dock_container.setMaximumWidth(layout.DOCK_WIDTH_PX)
-        self.dock_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self.dock_container.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
 
         dock_layout = QVBoxLayout(self.dock_container)
         dock_layout.setContentsMargins(0, 0, 0, 0)
@@ -453,21 +570,30 @@ class PlotPopup(QMainWindow):
         self.tab_widget.addTab(self.analysis_tab, "분석 도구")
 
         # 디자인 탭을 분리된 패널 모듈로 교체 및 초기화
-        self.design_tab = DesignSettingsPanel(parent=self, ui_font_name=self.ui_font_name)
+        self.design_tab = DesignSettingsPanel(
+            parent=self, ui_font_name=self.ui_font_name
+        )
         self.design_settings = self.design_tab.get_current_settings()
         self.design_tab.settings_changed.connect(self._on_design_settings_changed)
         self.design_tab.btn_lock.toggled.connect(self._log_design_lock)
 
         # --- [수정된 부분] 시그널 실행 순서 강제 재배치 ---
         try:
-            self.design_tab.btn_reset.clicked.disconnect(self.design_tab._reset_to_defaults)  # 1. 잘못된 순서로 연결된 기존 시그널 끊기
+            self.design_tab.btn_reset.clicked.disconnect(
+                self.design_tab._reset_to_defaults
+            )  # 1. 잘못된 순서로 연결된 기존 시그널 끊기
         except TypeError:
             pass
 
-        self.design_tab.btn_reset.clicked.connect(self._log_design_reset)  # 2. 로그 기록 (먼저 실행)
         self.design_tab.btn_reset.clicked.connect(
-            lambda: self.controller.clear_label_offsets_for_popup(self))  # 3. 데이터 삭제 (먼저 실행)
-        self.design_tab.btn_reset.clicked.connect(self.design_tab._reset_to_defaults)  # 4. 화면 다시 그리기 (가장 마지막에 실행)
+            self._log_design_reset
+        )  # 2. 로그 기록 (먼저 실행)
+        self.design_tab.btn_reset.clicked.connect(
+            lambda: self.controller.clear_label_offsets_for_popup(self)
+        )  # 3. 데이터 삭제 (먼저 실행)
+        self.design_tab.btn_reset.clicked.connect(
+            self.design_tab._reset_to_defaults
+        )  # 4. 화면 다시 그리기 (가장 마지막에 실행)
         # ---------------------------------------------------
 
         self.design_tab.label_move_clicked.connect(self.on_toggle_label_move)
@@ -483,30 +609,50 @@ class PlotPopup(QMainWindow):
 
         # 레이어 설정 도크 (도구 도크가 좌측, 레이어는 우측 기본 / 닫기는 불가, 떼기는 허용)
         self.layer_dock_widget = QDockWidget("레이어 설정", self)
-        self.layer_dock_widget.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.layer_dock_widget.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
         self.layer_dock_widget.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
         self.layer_dock_widget.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self.layer_dock_widget.setMaximumWidth(layout.DOCK_WIDTH_PX)
         self._layer_dock_container = QWidget()
         self._layer_dock_container.setObjectName("LayerDockContainer")
-        self._layer_dock_container.setStyleSheet("#LayerDockContainer { background-color: #FFFFFF; }")
+        self._layer_dock_container.setStyleSheet(
+            "#LayerDockContainer { background-color: #FFFFFF; }"
+        )
         self._layer_dock_container.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self._layer_dock_container.setMaximumWidth(layout.DOCK_WIDTH_PX)
-        self._layer_dock_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self._layer_dock_container.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
         layer_dock_inner = QVBoxLayout(self._layer_dock_container)
         layer_dock_inner.setContentsMargins(0, 0, 0, 0)
         layer_dock_inner.setSpacing(0)
         self._layer_dock_content = LayerDockWidget(self, ui_font_name=self.ui_font_name)
         # 레이어 도크는 상태 변경을 시그널로만 알리고, 실제 플롯 갱신은 팝업에서 관리
-        self._layer_dock_content.filter_state_changed.connect(self._on_layer_filter_state_changed)
-        self._layer_dock_content.overrides_changed.connect(self._on_layer_overrides_changed)
+        self._layer_dock_content.filter_state_changed.connect(
+            self._on_layer_filter_state_changed
+        )
+        self._layer_dock_content.overrides_changed.connect(
+            self._on_layer_overrides_changed
+        )
         layer_dock_inner.addWidget(self._layer_dock_content)
         self.layer_dock_widget.setWidget(self._layer_dock_container)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.layer_dock_widget)
-        self.layer_dock_widget.dockLocationChanged.connect(self._on_layer_dock_location_changed)
-        self.layer_dock_widget.topLevelChanged.connect(self._on_layer_dock_location_changed)
-        self.layer_dock_widget.visibilityChanged.connect(self._on_layer_dock_visibility_changed)
+        self.addDockWidget(
+            Qt.DockWidgetArea.RightDockWidgetArea, self.layer_dock_widget
+        )
+        self.layer_dock_widget.dockLocationChanged.connect(
+            self._on_layer_dock_location_changed
+        )
+        self.layer_dock_widget.topLevelChanged.connect(
+            self._on_layer_dock_location_changed
+        )
+        self.layer_dock_widget.visibilityChanged.connect(
+            self._on_layer_dock_visibility_changed
+        )
         self._layer_dock_visible = True
         self._layer_dock_floating = False
         self._layer_dock_geometry = None
@@ -528,7 +674,11 @@ class PlotPopup(QMainWindow):
             if not self.dock_widget.isFloating() and self.dock_widget.isVisible():
                 tools_area = self.dockWidgetArea(self.dock_widget)
                 if layer_area == tools_area:
-                    opposite = Qt.DockWidgetArea.RightDockWidgetArea if tools_area == Qt.DockWidgetArea.LeftDockWidgetArea else Qt.DockWidgetArea.LeftDockWidgetArea
+                    opposite = (
+                        Qt.DockWidgetArea.RightDockWidgetArea
+                        if tools_area == Qt.DockWidgetArea.LeftDockWidgetArea
+                        else Qt.DockWidgetArea.LeftDockWidgetArea
+                    )
                     self.addDockWidget(opposite, self.layer_dock_widget)
         self._resize_for_dock_state()
         self._update_dock_separators()
@@ -540,12 +690,16 @@ class PlotPopup(QMainWindow):
 
     def _on_dock_state_changed(self, *args):
         # 한 쪽 한 도크: 도구 도크가 막 붙었을 때 같은 쪽이면 도구를 반대쪽으로 이동 (먼저 붙은 쪽이 임자)
-        layer = getattr(self, 'layer_dock_widget', None)
+        layer = getattr(self, "layer_dock_widget", None)
         if layer and not self.dock_widget.isFloating() and not layer.isFloating():
             tools_area = self.dockWidgetArea(self.dock_widget)
             layer_area = self.dockWidgetArea(layer)
             if tools_area == layer_area:
-                opposite = Qt.DockWidgetArea.RightDockWidgetArea if tools_area == Qt.DockWidgetArea.LeftDockWidgetArea else Qt.DockWidgetArea.LeftDockWidgetArea
+                opposite = (
+                    Qt.DockWidgetArea.RightDockWidgetArea
+                    if tools_area == Qt.DockWidgetArea.LeftDockWidgetArea
+                    else Qt.DockWidgetArea.LeftDockWidgetArea
+                )
                 self.addDockWidget(opposite, self.dock_widget)
         self._resize_for_dock_state()
         self._update_dock_separators()
@@ -557,7 +711,7 @@ class PlotPopup(QMainWindow):
 
     def _update_dock_separators(self):
         """도구 도크·레이어 도크 위치에 따라 central 좌우 얇은 선(sep) 표시."""
-        if getattr(self, 'dock_widget', None) is None:
+        if getattr(self, "dock_widget", None) is None:
             return
         show_left = False
         show_right = False
@@ -567,7 +721,11 @@ class PlotPopup(QMainWindow):
                 show_left = True
             elif area == Qt.DockWidgetArea.RightDockWidgetArea:
                 show_right = True
-        if getattr(self, 'layer_dock_widget', None) and not self.layer_dock_widget.isFloating() and self.layer_dock_widget.isVisible():
+        if (
+            getattr(self, "layer_dock_widget", None)
+            and not self.layer_dock_widget.isFloating()
+            and self.layer_dock_widget.isVisible()
+        ):
             area = self.dockWidgetArea(self.layer_dock_widget)
             if area == Qt.DockWidgetArea.LeftDockWidgetArea:
                 show_left = True
@@ -636,17 +794,17 @@ class PlotPopup(QMainWindow):
         f1_row = QHBoxLayout()
         self.lbl_f1_axis = QLabel(f"F1:", font=font_normal)
         self.lbl_f1_axis.setFixedWidth(AXIS_LABEL_WIDTH)
-        self.range_widgets['y_min'] = QLineEdit()
-        self.range_widgets['y_max'] = QLineEdit()
-        for le in (self.range_widgets['y_min'], self.range_widgets['y_max']):
+        self.range_widgets["y_min"] = QLineEdit()
+        self.range_widgets["y_max"] = QLineEdit()
+        for le in (self.range_widgets["y_min"], self.range_widgets["y_max"]):
             le.setFixedWidth(48)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
             le.setStyleSheet(clean_line_edit_style)
             le.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         f1_row.addWidget(self.lbl_f1_axis)
-        f1_row.addWidget(self.range_widgets['y_min'])
+        f1_row.addWidget(self.range_widgets["y_min"])
         f1_row.addWidget(QLabel("~", font=font_normal))
-        f1_row.addWidget(self.range_widgets['y_max'])
+        f1_row.addWidget(self.range_widgets["y_max"])
         f1_row.addSpacing(8)
         self.lbl_f1_unit = QLabel("(Hz)", font=font_normal)
         f1_row.addWidget(self.lbl_f1_unit)
@@ -656,25 +814,29 @@ class PlotPopup(QMainWindow):
         f2_row = QHBoxLayout()
         self.lbl_x_axis = QLabel(f"{self.x_axis_label}:", font=font_normal)
         self.lbl_x_axis.setFixedWidth(AXIS_LABEL_WIDTH)
-        self.range_widgets['x_min'] = QLineEdit()
-        self.range_widgets['x_max'] = QLineEdit()
-        for le in (self.range_widgets['x_min'], self.range_widgets['x_max']):
+        self.range_widgets["x_min"] = QLineEdit()
+        self.range_widgets["x_max"] = QLineEdit()
+        for le in (self.range_widgets["x_min"], self.range_widgets["x_max"]):
             le.setFixedWidth(48)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
             le.setStyleSheet(clean_line_edit_style)
             le.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         f2_row.addWidget(self.lbl_x_axis)
-        f2_row.addWidget(self.range_widgets['x_min'])
+        f2_row.addWidget(self.range_widgets["x_min"])
         f2_row.addWidget(QLabel("~", font=font_normal))
-        f2_row.addWidget(self.range_widgets['x_max'])
+        f2_row.addWidget(self.range_widgets["x_max"])
         f2_row.addSpacing(8)
         self.lbl_f2_unit = QLabel("(Hz)", font=font_normal)
         f2_row.addWidget(self.lbl_f2_unit)
         f2_row.addStretch()
         range_group.addLayout(f2_row)
 
-        range_edits = [self.range_widgets['y_min'], self.range_widgets['y_max'],
-                       self.range_widgets['x_min'], self.range_widgets['x_max']]
+        range_edits = [
+            self.range_widgets["y_min"],
+            self.range_widgets["y_max"],
+            self.range_widgets["x_min"],
+            self.range_widgets["x_max"],
+        ]
         self._range_input_filter = RangeInputFilter(self)
         for le in range_edits:
             le.installEventFilter(self._range_input_filter)
@@ -698,8 +860,12 @@ class PlotPopup(QMainWindow):
             btn.setFont(font_normal)
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        btn_apply.setStyleSheet("background-color: #E6A23C; color: white; font-weight: bold; border-radius: 4px;")
-        btn_reset.setStyleSheet("background-color: #909399; color: white; font-weight: bold; border-radius: 4px;")
+        btn_apply.setStyleSheet(
+            "background-color: #E6A23C; color: white; font-weight: bold; border-radius: 4px;"
+        )
+        btn_reset.setStyleSheet(
+            "background-color: #909399; color: white; font-weight: bold; border-radius: 4px;"
+        )
 
         btn_apply.clicked.connect(self._on_range_apply_clicked)
         btn_reset.clicked.connect(self.on_reset_clicked)
@@ -734,7 +900,10 @@ class PlotPopup(QMainWindow):
         self.btn_compare.setFont(font_normal)
         self.btn_compare.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.btn_compare.setStyleSheet(self.nav_btn_style)
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
         self.btn_compare.setEnabled(len(data_list) >= 2)
         self.btn_compare.clicked.connect(self.on_btn_compare_click)
         tool_group.addWidget(self.btn_compare)
@@ -777,13 +946,18 @@ class PlotPopup(QMainWindow):
         btn_png = QPushButton("PNG 저장")
         btn_eps = QPushButton("EPS 저장")
 
-        for btn, fmt in zip([btn_jpg, btn_png, btn_eps], ['jpg', 'png', 'eps']):
+        for btn, fmt in zip([btn_jpg, btn_png, btn_eps], ["jpg", "png", "eps"]):
             btn.setFixedHeight(34)
             btn.setFont(QFont(self.ui_font_name, 8))
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            btn.setStyleSheet("background-color: white; border: 1px solid #C0C4CC; border-radius: 4px;")
+            btn.setStyleSheet(
+                "background-color: white; border: 1px solid #C0C4CC; border-radius: 4px;"
+            )
             btn.clicked.connect(
-                lambda checked, f=fmt: self.controller.download_plot(self.figure, f, parent_window=self))
+                lambda checked, f=fmt: self.controller.download_plot(
+                    self.figure, f, parent_window=self
+                )
+            )
             save_h.addWidget(btn)
         export_group.addLayout(save_h)
 
@@ -791,7 +965,9 @@ class PlotPopup(QMainWindow):
         btn_batch.setFixedHeight(38)
         btn_batch.setFont(font_normal)
         btn_batch.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        btn_batch.setStyleSheet("background-color: #409EFF; color: white; font-weight: bold; border-radius: 4px;")
+        btn_batch.setStyleSheet(
+            "background-color: #409EFF; color: white; font-weight: bold; border-radius: 4px;"
+        )
         btn_batch.clicked.connect(self.on_batch_save)
         export_group.addWidget(btn_batch)
 
@@ -800,33 +976,36 @@ class PlotPopup(QMainWindow):
     def _on_design_settings_changed(self, settings):
         """디자인 패널의 설정이 변경되었을 때 실시간 반영을 위한 콜백"""
         self.design_settings = settings
-        if hasattr(self, '_layer_dock_content') and self._layer_dock_content is not None:
+        if (
+            hasattr(self, "_layer_dock_content")
+            and self._layer_dock_content is not None
+        ):
             self._layer_dock_content._sync_design_controls_to_selection()
         self.on_apply()
 
     def _update_window_title(self, file_name):
         base = f"Plot Result - {file_name}"
         mode = self.controller.get_outlier_mode()
-        if mode == '1sigma':
+        if mode == "1sigma":
             base += " (이상치 제거 : 1σ)"
-        elif mode == '2sigma':
+        elif mode == "2sigma":
             base += " (이상치 제거 : 2σ)"
         self.setWindowTitle(base)
 
     def closeEvent(self, event):
         try:
             # 창이 닫힐 때 이 팝업과 연결된 모든 라벨 오프셋을 완전히 제거
-            if hasattr(self.controller, 'clear_label_offsets_for_popup'):
+            if hasattr(self.controller, "clear_label_offsets_for_popup"):
                 self.controller.clear_label_offsets_for_popup(self)
 
             if self.filter_panel is not None and self.filter_panel.isVisible():
                 self.filter_panel.close()
 
-            if hasattr(self, 'dock_widget') and self.dock_widget:
+            if hasattr(self, "dock_widget") and self.dock_widget:
                 self.dock_widget.close()
                 self.dock_widget.deleteLater()
                 self.dock_widget = None
-            if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget:
+            if hasattr(self, "layer_dock_widget") and self.layer_dock_widget:
                 # 플로팅 여부와 관계없이 메인 창과 함께 정리되도록 보장
                 try:
                     self.layer_dock_widget.setParent(self)
@@ -836,14 +1015,14 @@ class PlotPopup(QMainWindow):
                 self.layer_dock_widget.deleteLater()
                 self.layer_dock_widget = None
 
-            if hasattr(self.controller, 'remove_popup'):
+            if hasattr(self.controller, "remove_popup"):
                 self.controller.remove_popup(self)
 
             # Matplotlib Figure/Canvas 명시적 해제로 메모리 누수 방지
-            if hasattr(self, 'figure') and self.figure is not None:
+            if hasattr(self, "figure") and self.figure is not None:
                 self.figure.clear()
                 self.figure = None
-            if hasattr(self, 'canvas') and self.canvas is not None:
+            if hasattr(self, "canvas") and self.canvas is not None:
                 self.canvas.deleteLater()
                 self.canvas = None
         except Exception:
@@ -855,60 +1034,97 @@ class PlotPopup(QMainWindow):
         return isinstance(QApplication.focusWidget(), QLineEdit)
 
     def _bind_shortcuts(self):
-        QShortcut(QKeySequence(Qt.Key.Key_A), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            lambda: self._safe_switch_to_tab(0))
-        QShortcut(QKeySequence(Qt.Key.Key_D), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            lambda: self._safe_switch_to_tab(1))
-        QShortcut(QKeySequence(Qt.Key.Key_Tab), self).activated.connect(self._toggle_panels_visibility)
+        QShortcut(
+            QKeySequence(Qt.Key.Key_A), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(lambda: self._safe_switch_to_tab(0))
+        QShortcut(
+            QKeySequence(Qt.Key.Key_D), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(lambda: self._safe_switch_to_tab(1))
+        QShortcut(QKeySequence(Qt.Key.Key_Tab), self).activated.connect(
+            self._toggle_panels_visibility
+        )
 
         QShortcut(QKeySequence("Left"), self).activated.connect(self._safe_nav_prev)
         QShortcut(QKeySequence("Right"), self).activated.connect(self._safe_nav_next)
 
-        QShortcut(QKeySequence(Qt.Key.Key_R), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_ruler)
-        QShortcut(QKeySequence(Qt.Key.Key_T), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_label_move)
-        QShortcut(QKeySequence(Qt.Key.Key_M), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_compare_click)
+        QShortcut(
+            QKeySequence(Qt.Key.Key_R), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_ruler)
+        QShortcut(
+            QKeySequence(Qt.Key.Key_T), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_label_move)
+        QShortcut(
+            QKeySequence(Qt.Key.Key_M), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_compare_click)
         QShortcut(QKeySequence("Ctrl+S"), self).activated.connect(self._safe_save_jpg)
 
-        QShortcut(QKeySequence("Esc"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_cancel_ruler_point)
+        QShortcut(
+            QKeySequence("Esc"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_cancel_ruler_point)
         # L: 설정 유지 토글
-        QShortcut(QKeySequence(Qt.Key.Key_L), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_design_lock)
-        QShortcut(QKeySequence("Ctrl+Shift+S"), self).activated.connect(self._safe_batch_save)
-        QShortcut(QKeySequence("Ctrl+B"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_bold)
-        QShortcut(QKeySequence("Ctrl+I"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_italic)
+        QShortcut(
+            QKeySequence(Qt.Key.Key_L), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_design_lock)
+        QShortcut(QKeySequence("Ctrl+Shift+S"), self).activated.connect(
+            self._safe_batch_save
+        )
+        QShortcut(
+            QKeySequence("Ctrl+B"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_bold)
+        QShortcut(
+            QKeySequence("Ctrl+I"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_italic)
 
     def _safe_cancel_ruler_point(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         if self.controller.ruler_tool.active:
             self.controller.ruler_tool._cancel_current_drawing()
 
     def _safe_toggle_design_lock(self):
-        if self._is_input_focused(): return
-        if hasattr(self, 'design_tab') and self.design_tab is not None and hasattr(self.design_tab, 'btn_lock'):
-            self.design_tab.btn_lock.setChecked(not self.design_tab.btn_lock.isChecked())
+        if self._is_input_focused():
+            return
+        if (
+            hasattr(self, "design_tab")
+            and self.design_tab is not None
+            and hasattr(self.design_tab, "btn_lock")
+        ):
+            self.design_tab.btn_lock.setChecked(
+                not self.design_tab.btn_lock.isChecked()
+            )
 
     def _safe_batch_save(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.on_batch_save()
 
     def _safe_toggle_bold(self):
-        if self._is_input_focused(): return
-        if hasattr(self, 'design_tab') and self.design_tab is not None and hasattr(self.design_tab, 'btn_bold'):
-            self.design_tab.btn_bold.setChecked(not self.design_tab.btn_bold.isChecked())
+        if self._is_input_focused():
+            return
+        if (
+            hasattr(self, "design_tab")
+            and self.design_tab is not None
+            and hasattr(self.design_tab, "btn_bold")
+        ):
+            self.design_tab.btn_bold.setChecked(
+                not self.design_tab.btn_bold.isChecked()
+            )
 
     def _safe_toggle_italic(self):
-        if self._is_input_focused(): return
-        if hasattr(self, 'design_tab') and self.design_tab is not None and hasattr(self.design_tab, 'btn_italic'):
-            self.design_tab.btn_italic.setChecked(not self.design_tab.btn_italic.isChecked())
+        if self._is_input_focused():
+            return
+        if (
+            hasattr(self, "design_tab")
+            and self.design_tab is not None
+            and hasattr(self.design_tab, "btn_italic")
+        ):
+            self.design_tab.btn_italic.setChecked(
+                not self.design_tab.btn_italic.isChecked()
+            )
 
     def _safe_switch_to_tab(self, index):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         if self.tab_widget.currentIndex() != index:
             self.tab_widget.setCurrentIndex(index)
 
@@ -917,10 +1133,10 @@ class PlotPopup(QMainWindow):
         Tab 키로 도구 도크와 레이어 도크를 함께 임시 숨김/복원합니다.
         두 도크의 가시성/플로팅 상태/geometry를 기억해 두었다가 되돌립니다.
         """
-        if not hasattr(self, 'dock_widget') or not hasattr(self, 'layer_dock_widget'):
+        if not hasattr(self, "dock_widget") or not hasattr(self, "layer_dock_widget"):
             return
 
-        if getattr(self, '_panels_hidden_by_tab', False) is False:
+        if getattr(self, "_panels_hidden_by_tab", False) is False:
             # 현재: 패널이 보이는 상태 → 숨김
             self._panels_hidden_by_tab = True
 
@@ -931,7 +1147,11 @@ class PlotPopup(QMainWindow):
             # 레이어 도크 상태 저장
             self.was_layer_dock_visible = self.layer_dock_widget.isVisible()
             self.layer_dock_floating_state = self.layer_dock_widget.isFloating()
-            self.layer_dock_geometry = self.layer_dock_widget.geometry() if self.layer_dock_widget.isFloating() else None
+            self.layer_dock_geometry = (
+                self.layer_dock_widget.geometry()
+                if self.layer_dock_widget.isFloating()
+                else None
+            )
 
             if self.was_main_dock_visible:
                 self.dock_widget.hide()
@@ -941,15 +1161,15 @@ class PlotPopup(QMainWindow):
             # 현재: Tab으로 숨긴 상태 → 복원
             self._panels_hidden_by_tab = False
 
-            if getattr(self, 'was_main_dock_visible', True):
-                if getattr(self, 'main_dock_floating_state', False):
+            if getattr(self, "was_main_dock_visible", True):
+                if getattr(self, "main_dock_floating_state", False):
                     self.dock_widget.setFloating(True)
                 self.dock_widget.show()
 
-            if getattr(self, 'was_layer_dock_visible', True):
-                if getattr(self, 'layer_dock_floating_state', False):
+            if getattr(self, "was_layer_dock_visible", True):
+                if getattr(self, "layer_dock_floating_state", False):
                     self.layer_dock_widget.setFloating(True)
-                    if getattr(self, 'layer_dock_geometry', None) is not None:
+                    if getattr(self, "layer_dock_geometry", None) is not None:
                         self.layer_dock_widget.setGeometry(self.layer_dock_geometry)
                 self.layer_dock_widget.show()
 
@@ -957,62 +1177,83 @@ class PlotPopup(QMainWindow):
 
     def showEvent(self, event):
         super().showEvent(event)
-        if hasattr(self, '_update_dock_separators'):
+        if hasattr(self, "_update_dock_separators"):
             self._update_dock_separators()
 
     def _update_nav_buttons(self):
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
         total = len(data_list)
         self.btn_prev.setEnabled(idx > 0)
         self.btn_next.setEnabled(idx < total - 1)
 
     def _safe_nav_prev(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.on_nav_prev_clicked()
 
     def _safe_nav_next(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.on_nav_next_clicked()
 
     def on_nav_prev_clicked(self):
-        if not self.btn_prev.isEnabled(): return
+        if not self.btn_prev.isEnabled():
+            return
         self.setFocus()
         self._save_filter_state_for_current_file()
         self._save_layer_overrides_for_current_file()
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        self.current_idx = (getattr(self, 'current_idx', self.controller.get_current_index()) - 1) % len(data_list)
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        self.current_idx = (
+            getattr(self, "current_idx", self.controller.get_current_index()) - 1
+        ) % len(data_list)
         self.controller.set_current_index(self.current_idx)
         self._on_navigate_update()
 
     def on_nav_next_clicked(self):
-        if not self.btn_next.isEnabled(): return
+        if not self.btn_next.isEnabled():
+            return
         self.setFocus()
         self._save_filter_state_for_current_file()
         self._save_layer_overrides_for_current_file()
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        self.current_idx = (getattr(self, 'current_idx', self.controller.get_current_index()) + 1) % len(data_list)
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        self.current_idx = (
+            getattr(self, "current_idx", self.controller.get_current_index()) + 1
+        ) % len(data_list)
         self.controller.set_current_index(self.current_idx)
         self._on_navigate_update()
 
     def _save_layer_overrides_for_current_file(self):
         """현재 파일 인덱스에 대한 레이어 오버라이드를 저장."""
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
-        overrides = getattr(self, 'layer_design_overrides', {})
-        self.layer_design_overrides_by_file[idx] = {v: dict(o) for v, o in overrides.items()}
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
+        overrides = getattr(self, "layer_design_overrides", {})
+        self.layer_design_overrides_by_file[idx] = {
+            v: dict(o) for v, o in overrides.items()
+        }
 
     def _load_layer_overrides_for_file(self, idx):
         """해당 파일 인덱스의 레이어 오버라이드를 복원."""
         self.layer_design_overrides = {}
         if idx in self.layer_design_overrides_by_file:
-            self.layer_design_overrides = {v: dict(o) for v, o in self.layer_design_overrides_by_file[idx].items()}
-        if hasattr(self, '_layer_dock_content') and self._layer_dock_content:
+            self.layer_design_overrides = {
+                v: dict(o) for v, o in self.layer_design_overrides_by_file[idx].items()
+            }
+        if hasattr(self, "_layer_dock_content") and self._layer_dock_content:
             self._layer_dock_content._rebuild_effects()
 
     def _save_filter_state_for_current_file(self):
         """현재 파일 인덱스에 대한 모음 필터 상태를 저장."""
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
-        state = getattr(self, 'vowel_filter_state', {})
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
+        state = getattr(self, "vowel_filter_state", {})
         self.vowel_filter_state_by_file[idx] = dict(state)
 
     def _load_filter_state_for_file(self, idx):
@@ -1024,23 +1265,34 @@ class PlotPopup(QMainWindow):
 
     def _on_navigate_update(self):
         self._update_nav_buttons()
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
         self._load_layer_overrides_for_file(idx)
         self._load_filter_state_for_file(idx)
         current_data = data_list[idx]
-        self._update_window_title(current_data['name'])
+        self._update_window_title(current_data["name"])
         self.lbl_info.setText(
-            format_file_label(idx + 1, len(data_list), current_data['name']))
+            format_file_label(idx + 1, len(data_list), current_data["name"])
+        )
 
         if self.filter_panel is not None and self.filter_panel.isVisible():
             self.filter_panel.close()
 
         # 광역 디자인 설정: 설정 유지(lock)가 꺼져 있으면 파일 전환 시 디자인을 기본값으로 리셋. 라벨 위치 이동은 lock 여부와 관계없이 유지.
-        if hasattr(self, 'design_tab') and self.design_tab is not None and hasattr(self.design_tab, 'btn_lock') and not self.design_tab.btn_lock.isChecked():
+        if (
+            hasattr(self, "design_tab")
+            and self.design_tab is not None
+            and hasattr(self.design_tab, "btn_lock")
+            and not self.design_tab.btn_lock.isChecked()
+        ):
             self.design_tab._reset_to_defaults()
         else:
-            self.controller.refresh_plot(self.figure, self.canvas, self.range_widgets, self.lbl_info, self)
+            self.controller.refresh_plot(
+                self.figure, self.canvas, self.range_widgets, self.lbl_info, self
+            )
         self._refresh_layer_dock_vowels()
 
     def on_reset_clicked(self):
@@ -1049,28 +1301,33 @@ class PlotPopup(QMainWindow):
         app_logger.info(config.LOG_MSG["PLOT_RANGE_INIT"])
 
     def _log_design_lock(self, checked):
-        app_logger.info(config.LOG_MSG["DESIGN_KEPT"] if checked else config.LOG_MSG["DESIGN_UNKEPT"])
-        if hasattr(self, 'tool_indicator') and self.tool_indicator is not None:
+        app_logger.info(
+            config.LOG_MSG["DESIGN_KEPT"]
+            if checked
+            else config.LOG_MSG["DESIGN_UNKEPT"]
+        )
+        if hasattr(self, "tool_indicator") and self.tool_indicator is not None:
             self.tool_indicator.set_lock_on(checked)
 
     def _log_design_reset(self):
         app_logger.info(config.LOG_MSG["DESIGN_RESET"])
 
     def _reset_ranges_to_default(self, apply_plot=True):
-        if hasattr(self, 'fixed_plot_params'):
-            ptype = self.fixed_plot_params.get('type', 'f1_f2')
-            use_bark = self.fixed_plot_params.get('use_bark_units', False)
+        if hasattr(self, "fixed_plot_params"):
+            ptype = self.fixed_plot_params.get("type", "f1_f2")
+            use_bark = self.fixed_plot_params.get("use_bark_units", False)
             smart_ranges = self.controller.get_smart_ranges_for_params(ptype, use_bark)
             self.cb_sigma.setCurrentText(str(config.DEFAULT_SIGMA))
 
-            for k in ['y_min', 'y_max', 'x_min', 'x_max']:
+            for k in ["y_min", "y_max", "x_min", "x_max"]:
                 self.range_widgets[k].setText(smart_ranges[k])
 
             if apply_plot is True:
                 self.on_apply()
 
     def _safe_toggle_ruler(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.btn_ruler.setChecked(not self.btn_ruler.isChecked())
         self.on_toggle_ruler()
 
@@ -1080,37 +1337,44 @@ class PlotPopup(QMainWindow):
         self.btn_ruler.setChecked(self.controller.ruler_tool.active)
 
     def _safe_toggle_label_move(self):
-        if self._is_input_focused(): return
-        self.design_tab.btn_label_move.setChecked(not self.design_tab.btn_label_move.isChecked())
+        if self._is_input_focused():
+            return
+        self.design_tab.btn_label_move.setChecked(
+            not self.design_tab.btn_label_move.isChecked()
+        )
         self.on_toggle_label_move()
 
     def on_toggle_label_move(self):
         self.setFocus()
         self.controller.toggle_label_move(self)
         if self.controller.label_move_tool:
-            self.design_tab.btn_label_move.setChecked(self.controller.label_move_tool.active)
+            self.design_tab.btn_label_move.setChecked(
+                self.controller.label_move_tool.active
+            )
 
     def update_label_move_style(self, is_on):
         self.design_tab.btn_label_move.setChecked(is_on)
         self.design_tab.btn_label_move.setStyleSheet(
             "QPushButton#BtnLabelMove { background-color: #F0F2F5; border: 1px solid #DCDFE6; border-radius: 4px; color: #333;} "
-            "QPushButton#BtnLabelMove:checked { background-color: #E6A23C; color: white; font-weight: bold; border: none; }")
-        if hasattr(self, 'tool_indicator') and self.tool_indicator is not None:
+            "QPushButton#BtnLabelMove:checked { background-color: #E6A23C; color: white; font-weight: bold; border: none; }"
+        )
+        if hasattr(self, "tool_indicator") and self.tool_indicator is not None:
             self.tool_indicator.set_label_move_on(is_on)
 
     def _safe_compare_click(self):
-        if self._is_input_focused() or not self.btn_compare.isEnabled(): return
+        if self._is_input_focused() or not self.btn_compare.isEnabled():
+            return
         self.btn_compare.click()
 
     def on_btn_compare_click(self):
         self.setFocus()
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
         self.controller.open_compare_dialog(idx, parent_window=self)
 
     def _on_vowel_analysis_clicked(self):
         """모음 상세 분석 버튼 클릭 핸들러: 별도 Analysis 창을 연다."""
         self.setFocus()
-        if hasattr(self.controller, 'open_vowel_analysis_window'):
+        if hasattr(self.controller, "open_vowel_analysis_window"):
             self.controller.open_vowel_analysis_window(self)
 
     def _safe_toggle_layer_dock(self):
@@ -1124,7 +1388,11 @@ class PlotPopup(QMainWindow):
             self._layer_dock_visible = False
             self._layer_dock_saved_area = self.dockWidgetArea(self.layer_dock_widget)
             self._layer_dock_saved_floating = self.layer_dock_widget.isFloating()
-            self._layer_dock_saved_geometry = self.layer_dock_widget.geometry() if self.layer_dock_widget.isFloating() else None
+            self._layer_dock_saved_geometry = (
+                self.layer_dock_widget.geometry()
+                if self.layer_dock_widget.isFloating()
+                else None
+            )
             self.layer_dock_widget.hide()
         else:
             self._layer_dock_visible = True
@@ -1136,11 +1404,16 @@ class PlotPopup(QMainWindow):
 
     def _restore_layer_dock_position(self):
         """L로 다시 열 때 또는 Tab으로 패널 복원 시 레이어 도크 위치 복원."""
-        if getattr(self, '_layer_dock_saved_floating', False) and getattr(self, '_layer_dock_saved_geometry', None) is not None:
+        if (
+            getattr(self, "_layer_dock_saved_floating", False)
+            and getattr(self, "_layer_dock_saved_geometry", None) is not None
+        ):
             self.layer_dock_widget.setFloating(True)
             self.layer_dock_widget.setGeometry(self._layer_dock_saved_geometry)
         else:
-            area = getattr(self, '_layer_dock_saved_area', Qt.DockWidgetArea.RightDockWidgetArea)
+            area = getattr(
+                self, "_layer_dock_saved_area", Qt.DockWidgetArea.RightDockWidgetArea
+            )
             if not self.layer_dock_widget.isFloating():
                 self.addDockWidget(area, self.layer_dock_widget)
 
@@ -1149,14 +1422,23 @@ class PlotPopup(QMainWindow):
         return
 
     def _refresh_layer_dock_vowels(self):
-        if not hasattr(self, '_layer_dock_content'):
+        if not hasattr(self, "_layer_dock_content"):
             return
         try:
-            data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-            idx = getattr(self, 'current_idx', self.controller.get_current_index())
+            data_list = (
+                getattr(self, "plot_data_snapshot", None)
+                or self.controller.get_plot_data_list()
+            )
+            idx = getattr(self, "current_idx", self.controller.get_current_index())
             current_data = data_list[idx]
-            df = current_data['df']
-            col = 'Label' if 'Label' in df.columns else 'label' if 'label' in df.columns else None
+            df = current_data["df"]
+            col = (
+                "Label"
+                if "Label" in df.columns
+                else "label"
+                if "label" in df.columns
+                else None
+            )
             if col:
                 vowels = sorted(df[col].dropna().astype(str).unique().tolist())
                 self._layer_dock_content.set_vowels(vowels)
@@ -1174,34 +1456,48 @@ class PlotPopup(QMainWindow):
         self.on_apply()
 
     def _safe_save_jpg(self):
-        if self._is_input_focused(): return
-        self.controller.download_plot(self.figure, 'jpg', parent_window=self)
+        if self._is_input_focused():
+            return
+        self.controller.download_plot(self.figure, "jpg", parent_window=self)
 
     def on_apply(self):
         self.setFocus()
         self.figure.set_size_inches(6.5, 6.5)
         try:
-            y_min = float(self.range_widgets['y_min'].text())
-            y_max = float(self.range_widgets['y_max'].text())
-            x_min = float(self.range_widgets['x_min'].text())
-            x_max = float(self.range_widgets['x_max'].text())
+            y_min = float(self.range_widgets["y_min"].text())
+            y_max = float(self.range_widgets["y_max"].text())
+            x_min = float(self.range_widgets["x_min"].text())
+            x_max = float(self.range_widgets["x_max"].text())
 
             y_name, x_name = "F1", self.x_axis_label
             if y_min >= y_max:
-                QMessageBox.warning(self, "입력 오류", f"Y축({y_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.")
+                QMessageBox.warning(
+                    self,
+                    "입력 오류",
+                    f"Y축({y_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.",
+                )
                 return False
             if x_min >= x_max:
-                QMessageBox.warning(self, "입력 오류", f"X축({x_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.")
+                QMessageBox.warning(
+                    self,
+                    "입력 오류",
+                    f"X축({x_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.",
+                )
                 return False
         except ValueError:
             QMessageBox.warning(self, "입력 오류", "숫자만 입력해주세요.")
             return False
 
-        self.controller.refresh_plot(self.figure, self.canvas, self.range_widgets, self.lbl_info, self)
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
+        self.controller.refresh_plot(
+            self.figure, self.canvas, self.range_widgets, self.lbl_info, self
+        )
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
         current_data = data_list[idx]
-        self._update_window_title(current_data['name'])
+        self._update_window_title(current_data["name"])
         # on_apply는 좌표/디자인/필터 등의 변경에 대한 플롯 갱신만 담당하고,
         # 레이어 도크(모음 목록) 재구성은 파일 전환 시점(_on_file_index_changed 등)에서만 수행한다.
         return True
@@ -1231,19 +1527,31 @@ class PlotPopup(QMainWindow):
     def update_ruler_style(self, is_on):
         self.btn_ruler.setChecked(is_on)
         self.btn_ruler.setStyleSheet(
-            f"background-color: {'#67C23A' if is_on else '#F0F2F5'}; color: {'white' if is_on else '#333'}; font-weight: {'bold' if is_on else 'normal'}; border-radius: 4px;")
-        if hasattr(self, 'tool_indicator') and self.tool_indicator is not None:
+            f"background-color: {'#67C23A' if is_on else '#F0F2F5'}; color: {'white' if is_on else '#333'}; font-weight: {'bold' if is_on else 'normal'}; border-radius: 4px;"
+        )
+        if hasattr(self, "tool_indicator") and self.tool_indicator is not None:
             self.tool_indicator.set_ruler_on(is_on)
 
     def open_vowel_filter(self):
-        data_list = getattr(self, 'plot_data_snapshot', None) or self.controller.get_plot_data_list()
-        idx = getattr(self, 'current_idx', self.controller.get_current_index())
+        data_list = (
+            getattr(self, "plot_data_snapshot", None)
+            or self.controller.get_plot_data_list()
+        )
+        idx = getattr(self, "current_idx", self.controller.get_current_index())
         current_data = data_list[idx]
-        df = current_data['df']
+        df = current_data["df"]
 
-        col_label = 'Label' if 'Label' in df.columns else 'label' if 'label' in df.columns else None
+        col_label = (
+            "Label"
+            if "Label" in df.columns
+            else "label"
+            if "label" in df.columns
+            else None
+        )
         if not col_label:
-            QMessageBox.warning(self, "오류", "데이터에 모음 라벨(Label) 컬럼이 없습니다.")
+            QMessageBox.warning(
+                self, "오류", "데이터에 모음 라벨(Label) 컬럼이 없습니다."
+            )
             return
 
         if self.filter_panel is not None and self.filter_panel.isVisible():
@@ -1257,8 +1565,8 @@ class PlotPopup(QMainWindow):
             parent=self,
             vowels=unique_vowels,
             current_state=self.vowel_filter_state,
-            file_name=current_data['name'],
-            on_change_callback=self._on_filter_changed
+            file_name=current_data["name"],
+            on_change_callback=self._on_filter_changed,
         )
         self.filter_panel.show()
 
@@ -1270,9 +1578,16 @@ class PlotPopup(QMainWindow):
         current_ranges = {k: v.text() for k, v in self.range_widgets.items()}
         current_sigma = self.cb_sigma.currentText()
 
-        f1_unit_text = self.lbl_f1_unit.text().strip('()')
-        f2_unit_text = self.lbl_f2_unit.text().strip('()')
+        f1_unit_text = self.lbl_f1_unit.text().strip("()")
+        f2_unit_text = self.lbl_f2_unit.text().strip("()")
 
-        dialog = BatchSaveDialog(self, self.controller, current_ranges, f1_unit_text, f2_unit_text, self.x_axis_label,
-                                 current_sigma)
+        dialog = BatchSaveDialog(
+            self,
+            self.controller,
+            current_ranges,
+            f1_unit_text,
+            f2_unit_text,
+            self.x_axis_label,
+            current_sigma,
+        )
         dialog.exec()

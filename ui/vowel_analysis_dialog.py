@@ -3,9 +3,19 @@
 import base64
 import os
 from PyQt6.QtWidgets import (
-    QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QTableWidget,
-    QTableWidgetItem, QPushButton, QHeaderView, QMessageBox, QFileDialog,
-    QWidget, QLabel, QStyledItemDelegate,
+    QDialog,
+    QVBoxLayout,
+    QHBoxLayout,
+    QTabWidget,
+    QTableWidget,
+    QTableWidgetItem,
+    QPushButton,
+    QHeaderView,
+    QMessageBox,
+    QFileDialog,
+    QWidget,
+    QLabel,
+    QStyledItemDelegate,
 )
 from PyQt6.QtCore import Qt, QStandardPaths
 from PyQt6.QtGui import QIcon, QPixmap, QBrush, QColor, QFont, QPen, QPainter
@@ -45,46 +55,46 @@ class _DataRowVerticalLineDelegate(QStyledItemDelegate):
 
 # X축 타입 → 표시 라벨 (controller와 동일)
 X_AXIS_LABELS = {
-    'f1_f2': 'F2',
-    'f1_f3': 'F3',
-    'f1_f2_prime': "F2'",
-    'f1_f2_minus_f1': 'F2 - F1',
-    'f1_f2_prime_minus_f1': "F2' - F1",
+    "f1_f2": "F2",
+    "f1_f3": "F3",
+    "f1_f2_prime": "F2'",
+    "f1_f2_minus_f1": "F2 - F1",
+    "f1_f2_prime_minus_f1": "F2' - F1",
 }
 # 정규화 시 n 접두사
 X_AXIS_LABELS_NORM = {
-    'f1_f2': 'nF2',
-    'f1_f3': 'nF3',
-    'f1_f2_prime': "nF2'",
-    'f1_f2_minus_f1': 'nF2 - nF1',
-    'f1_f2_prime_minus_f1': "nF2' - nF1",
+    "f1_f2": "nF2",
+    "f1_f3": "nF3",
+    "f1_f2_prime": "nF2'",
+    "f1_f2_minus_f1": "nF2 - nF1",
+    "f1_f2_prime_minus_f1": "nF2' - nF1",
 }
 
 
 def _build_x_hz(df, plot_type):
     """plot_type에 따라 Hz 단위 X축 벡터 반환. 실패 시 None."""
-    if plot_type == 'f1_f2':
-        return df['F2'].values if 'F2' in df.columns else None
-    if plot_type == 'f1_f3':
-        return df['F3'].values if 'F3' in df.columns else None
-    if plot_type == 'f1_f2_prime':
-        if 'F3' not in df.columns:
+    if plot_type == "f1_f2":
+        return df["F2"].values if "F2" in df.columns else None
+    if plot_type == "f1_f3":
+        return df["F3"].values if "F3" in df.columns else None
+    if plot_type == "f1_f2_prime":
+        if "F3" not in df.columns:
             return None
-        f2p = calc_f2_prime(df['F1'].values, df['F2'].values, df['F3'].values)
+        f2p = calc_f2_prime(df["F1"].values, df["F2"].values, df["F3"].values)
         return f2p
-    if plot_type == 'f1_f2_minus_f1':
-        return (df['F2'].values - df['F1'].values)
-    if plot_type == 'f1_f2_prime_minus_f1':
-        if 'F3' not in df.columns:
+    if plot_type == "f1_f2_minus_f1":
+        return df["F2"].values - df["F1"].values
+    if plot_type == "f1_f2_prime_minus_f1":
+        if "F3" not in df.columns:
             return None
-        f2p = calc_f2_prime(df['F1'].values, df['F2'].values, df['F3'].values)
-        return f2p - df['F1'].values
-    return df['F2'].values if 'F2' in df.columns else None
+        f2p = calc_f2_prime(df["F1"].values, df["F2"].values, df["F3"].values)
+        return f2p - df["F1"].values
+    return df["F2"].values if "F2" in df.columns else None
 
 
 def _outlier_suffix_from_params(plot_params):
     """fixed_plot_params에서 이상치 접미사 문자열 반환."""
-    sigma = float(plot_params.get('sigma', 2.0))
+    sigma = float(plot_params.get("sigma", 2.0))
     if sigma <= 1.0:
         return "_이상치 제거 1σ"
     return "_이상치 제거 2σ"
@@ -94,7 +104,7 @@ def _analysis_base_name(file_name, plot_params):
     """저장 시 사용할 기본 이름 (확장자 제거 + 이상치 접미사 + 정규화 접미사 + _analysis)."""
     base = os.path.splitext(file_name)[0]
     base += _outlier_suffix_from_params(plot_params)
-    norm = (plot_params or {}).get('normalization')
+    norm = (plot_params or {}).get("normalization")
     if norm:
         base += f"_{norm}"
     return base + "_analysis"
@@ -103,7 +113,15 @@ def _analysis_base_name(file_name, plot_params):
 class VowelAnalysisDialog(QDialog):
     """모음 상세 분석 결과를 표로 보여주고, 엑셀/CSV 저장을 제공하는 다이얼로그."""
 
-    def __init__(self, parent, controller, plot_data_snapshot, fixed_plot_params, title_suffix, initial_tab_idx=0):
+    def __init__(
+        self,
+        parent,
+        controller,
+        plot_data_snapshot,
+        fixed_plot_params,
+        title_suffix,
+        initial_tab_idx=0,
+    ):
         super().__init__(parent)
         self.controller = controller
         self.plot_data_snapshot = plot_data_snapshot
@@ -111,12 +129,12 @@ class VowelAnalysisDialog(QDialog):
         self.title_suffix = title_suffix
         self._initial_tab_idx = initial_tab_idx
         self._analysis_results = []  # list of (file_name, result_dict) per tab
-        self._normalization = self.fixed_plot_params.get('normalization')
-        plot_type = self.fixed_plot_params.get('type', 'f1_f2')
+        self._normalization = self.fixed_plot_params.get("normalization")
+        plot_type = self.fixed_plot_params.get("type", "f1_f2")
         if self._normalization:
-            self._x_axis_label = X_AXIS_LABELS_NORM.get(plot_type, 'nF2')
+            self._x_axis_label = X_AXIS_LABELS_NORM.get(plot_type, "nF2")
         else:
-            self._x_axis_label = X_AXIS_LABELS.get(plot_type, 'F2')
+            self._x_axis_label = X_AXIS_LABELS.get(plot_type, "F2")
         self.setWindowTitle(f"Analysis - {title_suffix}")
         self.setMinimumWidth(DIALOG_WIDTH)
         self.setMinimumHeight(460)
@@ -191,21 +209,25 @@ class VowelAnalysisDialog(QDialog):
         """비정규화: Hz df로 F1·X축 통계, Bark 기준 중심-개별 거리. 정규화: 정규화 df로 nF1·nX축 통계, 정규화 단위 기준 중심-개별 거리."""
         if not self.plot_data_snapshot:
             return
-        plot_type = self.fixed_plot_params.get('type', 'f1_f2')
+        plot_type = self.fixed_plot_params.get("type", "f1_f2")
         norm = self._normalization
         for data in self.plot_data_snapshot:
-            name = data.get('name', '')
-            df_raw = data.get('df')
+            name = data.get("name", "")
+            df_raw = data.get("df")
             if df_raw is None or df_raw.empty:
                 self._add_empty_tab(name, "데이터 없음")
                 self._analysis_results.append((name, None))
                 continue
-            label_col = 'Label' if 'Label' in df_raw.columns else 'label'
-            if label_col not in df_raw.columns or 'F1' not in df_raw.columns or 'F2' not in df_raw.columns:
+            label_col = "Label" if "Label" in df_raw.columns else "label"
+            if (
+                label_col not in df_raw.columns
+                or "F1" not in df_raw.columns
+                or "F2" not in df_raw.columns
+            ):
                 self._add_empty_tab(name, "필수 컬럼(F1, F2, Label) 없음")
                 self._analysis_results.append((name, None))
                 continue
-            if norm and getattr(self.controller, '_apply_normalization', None):
+            if norm and getattr(self.controller, "_apply_normalization", None):
                 df = self.controller._apply_normalization(df_raw, norm)
             else:
                 df = df_raw
@@ -215,28 +237,30 @@ class VowelAnalysisDialog(QDialog):
                 self._analysis_results.append((name, None))
                 continue
             if norm:
-                df_work = df[[label_col, 'F1', 'F2']].copy()
-                df_work['x_norm'] = x_vals
+                df_work = df[[label_col, "F1", "F2"]].copy()
+                df_work["x_norm"] = x_vals
                 result = analyze_vowels(
                     df_work,
-                    x_col='x_norm',
-                    y_col='F1',
+                    x_col="x_norm",
+                    y_col="F1",
                     label_col=label_col,
                 )
-                result['point_distances'] = calculate_point_distances_from_centroid(
-                    df_work, x_col='x_norm', y_col='F1', label_col=label_col
+                result["point_distances"] = calculate_point_distances_from_centroid(
+                    df_work, x_col="x_norm", y_col="F1", label_col=label_col
                 )
             else:
-                df_hz = df[[label_col, 'F1', 'F2']].copy()
-                df_hz['x_hz'] = x_vals
+                df_hz = df[[label_col, "F1", "F2"]].copy()
+                df_hz["x_hz"] = x_vals
                 result = analyze_vowels(
                     df_hz,
-                    x_col='x_hz',
-                    y_col='F1',
+                    x_col="x_hz",
+                    y_col="F1",
                     label_col=label_col,
                 )
-                result['point_distances'] = calculate_point_distances_from_centroid_bark(
-                    df, label_col=label_col, x_hz=x_vals
+                result["point_distances"] = (
+                    calculate_point_distances_from_centroid_bark(
+                        df, label_col=label_col, x_hz=x_vals
+                    )
                 )
             self._analysis_results.append((name, result))
             self._add_table_tab(name, result)
@@ -254,11 +278,11 @@ class VowelAnalysisDialog(QDialog):
         self.tabs.addTab(w, truncate_display_name(tab_label, MAX_DISPLAY_NAME_LEN))
 
     def _add_table_tab(self, tab_label, result):
-        if not result or not result.get('statistics'):
+        if not result or not result.get("statistics"):
             self._add_empty_tab(tab_label, "분석 결과 없음")
             return
-        stats = result['statistics']
-        point_dist = result.get('point_distances') or {}
+        stats = result["statistics"]
+        point_dist = result.get("point_distances") or {}
         vowels = sorted(stats.keys())
         widths = [VOWEL_COL_WIDTH] + [DATA_COL_WIDTH] * 8
         n_data_rows = len(vowels)
@@ -294,7 +318,7 @@ class VowelAnalysisDialog(QDialog):
             return it
 
         # Row 0: 빈칸 | F1 또는 nF1 | X축 라벨 | 중심-개별 거리 (정규화 시 (Bark) 생략)
-        norm = getattr(self, '_normalization', None)
+        norm = getattr(self, "_normalization", None)
         y_label = "nF1" if norm else "F1"
         dist_label = "중심-개별 거리" if norm else "중심-개별 거리(Bark)"
         set_header_item(0, 0, "")
@@ -306,30 +330,47 @@ class VowelAnalysisDialog(QDialog):
         table.setSpan(0, 7, 1, 2)
         # Row 1: 빈칸 | 평균 SD range | 평균 SD range | 평균 SD
         set_header_item(1, 0, "")
-        for c, text in enumerate(["평균", "SD", "range", "평균", "SD", "range", "평균", "SD"]):
+        for c, text in enumerate(
+            ["평균", "SD", "range", "평균", "SD", "range", "평균", "SD"]
+        ):
             set_header_item(1, c + 1, text)
 
         # Gerstman: 큰 수 → .1f mean/SD, 정수 range. 그 외 정규화: 소수 넷째 자리. 비정규화: 기존
-        is_gerstman = norm == 'Gerstman'
+        is_gerstman = norm == "Gerstman"
         if norm and not is_gerstman:
-            fmt_y, fmt_x, fmt_r, fmt_d = _fmt_norm_small, _fmt_norm_small, _fmt_norm_small, _fmt_norm_small
+            fmt_y, fmt_x, fmt_r, fmt_d = (
+                _fmt_norm_small,
+                _fmt_norm_small,
+                _fmt_norm_small,
+                _fmt_norm_small,
+            )
         elif is_gerstman:
-            fmt_y, fmt_x, fmt_r, fmt_d = _fmt_mean_sd, _fmt_mean_sd, _fmt_range, _fmt_mean_sd
+            fmt_y, fmt_x, fmt_r, fmt_d = (
+                _fmt_mean_sd,
+                _fmt_mean_sd,
+                _fmt_range,
+                _fmt_mean_sd,
+            )
         else:
-            fmt_y, fmt_x, fmt_r, fmt_d = _fmt_mean_sd, _fmt_mean_sd, _fmt_range, _fmt_bark
+            fmt_y, fmt_x, fmt_r, fmt_d = (
+                _fmt_mean_sd,
+                _fmt_mean_sd,
+                _fmt_range,
+                _fmt_bark,
+            )
         for row, v in enumerate(vowels):
             s = stats[v]
             pd_v = point_dist.get(v, {})
             r = row + n_header_rows
             table.setItem(r, 0, QTableWidgetItem(str(v)))
-            table.setItem(r, 1, QTableWidgetItem(fmt_y(s['y_mean'])))
-            table.setItem(r, 2, QTableWidgetItem(fmt_y(s['y_std'])))
-            table.setItem(r, 3, QTableWidgetItem(fmt_r(s['y_range'])))
-            table.setItem(r, 4, QTableWidgetItem(fmt_x(s['x_mean'])))
-            table.setItem(r, 5, QTableWidgetItem(fmt_x(s['x_std'])))
-            table.setItem(r, 6, QTableWidgetItem(fmt_r(s['x_range'])))
-            table.setItem(r, 7, QTableWidgetItem(fmt_d(pd_v.get('distance_mean'))))
-            table.setItem(r, 8, QTableWidgetItem(fmt_d(pd_v.get('distance_std'))))
+            table.setItem(r, 1, QTableWidgetItem(fmt_y(s["y_mean"])))
+            table.setItem(r, 2, QTableWidgetItem(fmt_y(s["y_std"])))
+            table.setItem(r, 3, QTableWidgetItem(fmt_r(s["y_range"])))
+            table.setItem(r, 4, QTableWidgetItem(fmt_x(s["x_mean"])))
+            table.setItem(r, 5, QTableWidgetItem(fmt_x(s["x_std"])))
+            table.setItem(r, 6, QTableWidgetItem(fmt_r(s["x_range"])))
+            table.setItem(r, 7, QTableWidgetItem(fmt_d(pd_v.get("distance_mean"))))
+            table.setItem(r, 8, QTableWidgetItem(fmt_d(pd_v.get("distance_std"))))
 
         w = QWidget()
         layout = QVBoxLayout(w)
@@ -346,9 +387,14 @@ class VowelAnalysisDialog(QDialog):
         return self._analysis_results[idx]
 
     def _initial_save_dir(self):
-        if getattr(self.controller, 'last_save_dir', None):
+        if getattr(self.controller, "last_save_dir", None):
             return self.controller.last_save_dir
-        return QStandardPaths.writableLocation(QStandardPaths.StandardLocation.DownloadLocation) or ""
+        return (
+            QStandardPaths.writableLocation(
+                QStandardPaths.StandardLocation.DownloadLocation
+            )
+            or ""
+        )
 
     def _save_excel(self):
         name, result = self._current_file_name_and_result()
@@ -366,8 +412,10 @@ class VowelAnalysisDialog(QDialog):
         if not path:
             return
         try:
-            _export_to_excel(result, path, self._x_axis_label, normalized=bool(self._normalization))
-            if hasattr(self.controller, 'last_save_dir'):
+            _export_to_excel(
+                result, path, self._x_axis_label, normalized=bool(self._normalization)
+            )
+            if hasattr(self.controller, "last_save_dir"):
                 self.controller.last_save_dir = os.path.dirname(path)
             QMessageBox.information(self, "저장 완료", f"저장되었습니다:\n{path}")
         except ImportError:
@@ -395,8 +443,10 @@ class VowelAnalysisDialog(QDialog):
         if not path:
             return
         try:
-            _export_to_csv(result, path, self._x_axis_label, normalized=bool(self._normalization))
-            if hasattr(self.controller, 'last_save_dir'):
+            _export_to_csv(
+                result, path, self._x_axis_label, normalized=bool(self._normalization)
+            )
+            if hasattr(self.controller, "last_save_dir"):
                 self.controller.last_save_dir = os.path.dirname(path)
             QMessageBox.information(self, "저장 완료", f"저장되었습니다:\n{path}")
         except Exception as e:
@@ -446,41 +496,46 @@ def _fmt_norm_small(val):
 def _result_to_dataframe(result, x_axis_label, normalized=False):
     """analyze_vowels 결과를 표와 동일한 열 구조의 DataFrame으로 만든다. 정규화 시 nF1/nF2·거리 컬럼명."""
     import pandas as pd
-    stats = result.get('statistics') or {}
-    point_dist = result.get('point_distances') or {}
+
+    stats = result.get("statistics") or {}
+    point_dist = result.get("point_distances") or {}
     vowels = sorted(stats.keys())
-    y_pre = 'nF1' if normalized else 'F1'
-    dist_mean_col = '중심-개별 거리 평균' if normalized else '중심-개별 거리(Bark) 평균'
-    dist_sd_col = '중심-개별 거리 SD' if normalized else '중심-개별 거리(Bark) SD'
+    y_pre = "nF1" if normalized else "F1"
+    dist_mean_col = "중심-개별 거리 평균" if normalized else "중심-개별 거리(Bark) 평균"
+    dist_sd_col = "중심-개별 거리 SD" if normalized else "중심-개별 거리(Bark) SD"
     rows = []
     for v in vowels:
         s = stats[v]
         pd_v = point_dist.get(v, {})
-        rows.append({
-            '모음': v,
-            f'{y_pre} 평균': s['y_mean'],
-            f'{y_pre} SD': s['y_std'],
-            f'{y_pre} range': s['y_range'],
-            f'{x_axis_label} 평균': s['x_mean'],
-            f'{x_axis_label} SD': s['x_std'],
-            f'{x_axis_label} range': s['x_range'],
-            dist_mean_col: pd_v.get('distance_mean'),
-            dist_sd_col: pd_v.get('distance_std'),
-        })
+        rows.append(
+            {
+                "모음": v,
+                f"{y_pre} 평균": s["y_mean"],
+                f"{y_pre} SD": s["y_std"],
+                f"{y_pre} range": s["y_range"],
+                f"{x_axis_label} 평균": s["x_mean"],
+                f"{x_axis_label} SD": s["x_std"],
+                f"{x_axis_label} range": s["x_range"],
+                dist_mean_col: pd_v.get("distance_mean"),
+                dist_sd_col: pd_v.get("distance_std"),
+            }
+        )
     return pd.DataFrame(rows)
 
 
-def _export_to_excel(result, path, x_axis_label='F2', normalized=False):
+def _export_to_excel(result, path, x_axis_label="F2", normalized=False):
     import pandas as pd
+
     try:
         import openpyxl  # noqa: F401
     except ImportError:
         raise ImportError("openpyxl")
     df = _result_to_dataframe(result, x_axis_label, normalized=normalized)
-    df.to_excel(path, index=False, engine='openpyxl')
+    df.to_excel(path, index=False, engine="openpyxl")
 
 
 def _export_to_csv(result, path, x_axis_label, normalized=False):
     import pandas as pd
+
     df = _result_to_dataframe(result, x_axis_label, normalized=normalized)
-    df.to_csv(path, index=False, encoding='utf-8-sig')
+    df.to_csv(path, index=False, encoding="utf-8-sig")

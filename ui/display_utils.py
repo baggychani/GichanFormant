@@ -15,7 +15,7 @@ def strip_gichan_prefix(name: str) -> str:
     if not name:
         return name
     if name.lower().startswith(PREFIX_STRIP):
-        return name[len(PREFIX_STRIP):].lstrip("_") or name
+        return name[len(PREFIX_STRIP) :].lstrip("_") or name
     return name
 
 
@@ -27,7 +27,9 @@ def truncate_display_name(name: str, max_len: int = MAX_DISPLAY_NAME_LEN) -> str
     return name[: max_len - 3] + "..."
 
 
-def format_file_label(n: int, m: int, name: str, max_len: int = MAX_FILE_LABEL_LEN) -> str:
+def format_file_label(
+    n: int, m: int, name: str, max_len: int = MAX_FILE_LABEL_LEN
+) -> str:
     """n/m: 파일명 형식 문자열을 max_len 이하로 만든다. 넘치면 파일명만 잘라 끝에 ... 붙인다."""
     name = strip_gichan_prefix(name)
     prefix = f"{n}/{m}: "

@@ -3,6 +3,7 @@
 
 import sys
 import os
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import unittest
@@ -51,11 +52,9 @@ class TestParseFixedColumns(unittest.TestCase):
 
     def test_success(self):
         """정상 입력: F1 < F2, 라벨 있으면 (DataFrame, None) 반환."""
-        df = pd.DataFrame({
-            0: [300, 400, 500],
-            1: [2000, 1800, 1500],
-            2: ["/i/", "/e/", "/a/"]
-        })
+        df = pd.DataFrame(
+            {0: [300, 400, 500], 1: [2000, 1800, 1500], 2: ["/i/", "/e/", "/a/"]}
+        )
         result_df, error = self.processor._parse_fixed_columns(df)
         self.assertIsNone(error)
         self.assertIsNotNone(result_df)
@@ -66,10 +65,7 @@ class TestParseFixedColumns(unittest.TestCase):
 
     def test_success_no_label_gets_unknown(self):
         """라벨 열이 없으면 Label='Unknown'으로 채워진 DataFrame 반환."""
-        df = pd.DataFrame({
-            0: [300, 400],
-            1: [2000, 1800]
-        })
+        df = pd.DataFrame({0: [300, 400], 1: [2000, 1800]})
         result_df, error = self.processor._parse_fixed_columns(df)
         self.assertIsNone(error)
         self.assertIsNotNone(result_df)

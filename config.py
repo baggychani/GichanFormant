@@ -100,9 +100,18 @@ RULER_DELETE_THRESHOLD_PX = 40
 PLOT_DESCS = {
     "f1_f2": ("F2 축:", "가장 표준적인 모음 사각도입니다."),
     "f1_f3": ("F3 축:", "R-coloring(Rhoticity) 등 F3가 중요한 언어 분석에 유용합니다."),
-    "f1_f2_prime": ("F2' 축:", "F2와 F3를 통합하여 청각적 인지를 반영한 Effective F2 모델입니다."),
-    "f1_f2_minus_f1": ("(F2-F1) 축:", "Ladefoged가 제안한 방식으로, 후설성을 청각적으로 더 정확히 반영합니다."),
-    "f1_f2_prime_minus_f1": ("(F2'-F1) 축:", "모음의 스펙트럼 통합 효과를 고려하여 청각적 거리감을 극대화한 모델입니다."),
+    "f1_f2_prime": (
+        "F2' 축:",
+        "F2와 F3를 통합하여 청각적 인지를 반영한 Effective F2 모델입니다.",
+    ),
+    "f1_f2_minus_f1": (
+        "(F2-F1) 축:",
+        "Ladefoged가 제안한 방식으로, 후설성을 청각적으로 더 정확히 반영합니다.",
+    ),
+    "f1_f2_prime_minus_f1": (
+        "(F2'-F1) 축:",
+        "모음의 스펙트럼 통합 효과를 고려하여 청각적 거리감을 극대화한 모델입니다.",
+    ),
 }
 
 
@@ -111,39 +120,93 @@ PLOT_DESCS = {
 # =============================================================================
 # plot_engine, controller, UI 범위 입력 초기값. 한 곳만 수정하면 전체 반영.
 Y_BASE_HZ = {
-    "y_min": 200, "y_max": 1000,
-    "y_ticks": range(200, 1001, 200), "y_texts": [200, 400, 600, 800, 1000],
+    "y_min": 200,
+    "y_max": 1000,
+    "y_ticks": range(200, 1001, 200),
+    "y_texts": [200, 400, 600, 800, 1000],
 }
 
 HZ_RANGES = {
-    "f1_f2": {**Y_BASE_HZ, "x_min": 500, "x_max": 3500,
-              "x_ticks": range(500, 3501, 500), "x_texts": [500, 1000, 2000, 3500]},
-    "f1_f3": {**Y_BASE_HZ, "x_min": 1500, "x_max": 4500,
-              "x_ticks": range(1500, 4501, 500), "x_texts": [1500, 3000, 4500]},
-    "f1_f2_prime": {**Y_BASE_HZ, "x_min": 500, "x_max": 4000,
-                    "x_ticks": range(500, 4001, 500), "x_texts": [500, 1500, 2500, 3500]},
-    "f1_f2_minus_f1": {**Y_BASE_HZ, "x_min": 0, "x_max": 3000,
-                       "x_ticks": range(0, 3001, 500), "x_texts": [0, 1000, 2000, 3000]},
-    "f1_f2_prime_minus_f1": {**Y_BASE_HZ, "x_min": 0, "x_max": 3500,
-                             "x_ticks": range(0, 3501, 500), "x_texts": [0, 1000, 2000, 3000]},
+    "f1_f2": {
+        **Y_BASE_HZ,
+        "x_min": 500,
+        "x_max": 3500,
+        "x_ticks": range(500, 3501, 500),
+        "x_texts": [500, 1000, 2000, 3500],
+    },
+    "f1_f3": {
+        **Y_BASE_HZ,
+        "x_min": 1500,
+        "x_max": 4500,
+        "x_ticks": range(1500, 4501, 500),
+        "x_texts": [1500, 3000, 4500],
+    },
+    "f1_f2_prime": {
+        **Y_BASE_HZ,
+        "x_min": 500,
+        "x_max": 4000,
+        "x_ticks": range(500, 4001, 500),
+        "x_texts": [500, 1500, 2500, 3500],
+    },
+    "f1_f2_minus_f1": {
+        **Y_BASE_HZ,
+        "x_min": 0,
+        "x_max": 3000,
+        "x_ticks": range(0, 3001, 500),
+        "x_texts": [0, 1000, 2000, 3000],
+    },
+    "f1_f2_prime_minus_f1": {
+        **Y_BASE_HZ,
+        "x_min": 0,
+        "x_max": 3500,
+        "x_ticks": range(0, 3501, 500),
+        "x_texts": [0, 1000, 2000, 3000],
+    },
 }
 
 Y_BASE_BARK = {
-    "y_min": 2, "y_max": 9,
-    "y_ticks": range(2, 10, 1), "y_texts": range(2, 10, 2),
+    "y_min": 2,
+    "y_max": 9,
+    "y_ticks": range(2, 10, 1),
+    "y_texts": range(2, 10, 2),
 }
 
 BARK_RANGES = {
-    "f1_f2": {**Y_BASE_BARK, "x_min": 4, "x_max": 16,
-              "x_ticks": range(4, 17, 1), "x_texts": range(4, 17, 2)},
-    "f1_f3": {**Y_BASE_BARK, "x_min": 12, "x_max": 19,
-              "x_ticks": range(12, 20, 1), "x_texts": range(12, 20, 2)},
-    "f1_f2_prime": {**Y_BASE_BARK, "x_min": 4, "x_max": 18,
-                    "x_ticks": range(4, 19, 1), "x_texts": range(4, 20, 2)},
-    "f1_f2_minus_f1": {**Y_BASE_BARK, "x_min": 0, "x_max": 12,
-                       "x_ticks": range(0, 13, 1), "x_texts": range(0, 14, 2)},
-    "f1_f2_prime_minus_f1": {**Y_BASE_BARK, "x_min": 0, "x_max": 14,
-                             "x_ticks": range(0, 15, 1), "x_texts": range(0, 16, 2)},
+    "f1_f2": {
+        **Y_BASE_BARK,
+        "x_min": 4,
+        "x_max": 16,
+        "x_ticks": range(4, 17, 1),
+        "x_texts": range(4, 17, 2),
+    },
+    "f1_f3": {
+        **Y_BASE_BARK,
+        "x_min": 12,
+        "x_max": 19,
+        "x_ticks": range(12, 20, 1),
+        "x_texts": range(12, 20, 2),
+    },
+    "f1_f2_prime": {
+        **Y_BASE_BARK,
+        "x_min": 4,
+        "x_max": 18,
+        "x_ticks": range(4, 19, 1),
+        "x_texts": range(4, 20, 2),
+    },
+    "f1_f2_minus_f1": {
+        **Y_BASE_BARK,
+        "x_min": 0,
+        "x_max": 12,
+        "x_ticks": range(0, 13, 1),
+        "x_texts": range(0, 14, 2),
+    },
+    "f1_f2_prime_minus_f1": {
+        **Y_BASE_BARK,
+        "x_min": 0,
+        "x_max": 14,
+        "x_ticks": range(0, 15, 1),
+        "x_texts": range(0, 16, 2),
+    },
 }
 
 
@@ -151,7 +214,9 @@ BARK_RANGES = {
 # 7. 파싱·검증 에러 메시지 (DataProcessor 등)
 # =============================================================================
 PARSE_ERR_COLUMNS_TOO_FEW = "F1/F2 열 개수가 부족합니다."
-PARSE_ERR_F1_F2_INVALID = "F1/F2가 모두 숫자가 아니거나 F1 < F2 조건을 만족하지 않습니다."
+PARSE_ERR_F1_F2_INVALID = (
+    "F1/F2가 모두 숫자가 아니거나 F1 < F2 조건을 만족하지 않습니다."
+)
 PARSE_ERR_EMPTY_RESULT = "데이터 파싱 결과가 비어 있습니다."
 
 
@@ -163,23 +228,19 @@ LOG_MSG = {
     "APP_START": "{app_title}이(가) 실행되었습니다. 데이터 파일을 드래그하거나 클릭하여 로드하세요.",
     "RESET_ALL": "[SYSTEM] 모든 데이터가 초기화되었습니다. 새로운 분석을 시작할 수 있습니다.",
     "RESET_UI": "[SYSTEM] 화면 설정 및 옵션이 기본값으로 복구되었습니다.",
-
     "FILE_LOAD_NEW_SUCCESS": "신규 파일 {success_count}개가 로드되었습니다. (총 {total_files}개)",
     "FILE_LOAD_FAILED_SUMMARY": "로드 실패: {fail_count}개의 파일에 데이터 오류가 있습니다. ({names})",
     "FILE_LOAD_FAILED_DEBUG": "[DEBUG] {name} 로드 실패 원인 예시: {msg}",
     "FILE_REMOVED": "파일이 리스트에서 제거되었습니다: {removed_name}",
     "FILE_ROW_DROPPED": "[INFO] {name}에서 데이터 조건을 만족하지 않아 일부 데이터 행이 제외되었습니다. (라벨별 누락: {detail})",
-
     "OUTLIER_OFF": "[INFO] 이상치 제거가 해제되었습니다.",
     "OUTLIER_REMOVED_SUMMARY": "총 {file_count}개 파일에서 {total_removed}개의 데이터 포인트가 이상치로 제거되었습니다.{detail}",
     "OUTLIER_NOT_REMOVED_MIN_LABELS": "[INFO] 이상치 제거가 수행되지 않았습니다. "
     "모음별 최소 5개 데이터가 있어야 이상치 제거가 가능합니다. (데이터 수 부족 라벨 예시: {detail})",
     "OUTLIER_NOT_REMOVED_NONE": "[INFO] 이상치 제거 기준을 적용했지만 제거된 데이터 포인트가 없습니다.",
-
     "PLOT_REFRESH_ERROR": "[ERROR] 플롯 창 갱신 중 오류가 발생했습니다: {e}",
     "FILE_LOAD_SUMMARY": "[SUCCESS] 총 {new_count}개의 파일이 로드되었습니다. (현재 총 {total_count}개)",
     "FILE_LOAD_ERROR": "[ERROR] {fail_count}개의 파일을 불러오지 못했습니다. (지원하지 않는 형식이거나 데이터 없음)",
-
     "PLOT_OPEN": "[INFO] {ptype} 플롯이 새 창으로 열렸습니다. (대상: {fname})",
     "PLOT_OPEN_DONE": "플롯 창 생성 완료: {fname}",
     "ANALYSIS_OPEN": "모음 상세 분석 창이 열렸습니다: {title_suffix}",
@@ -193,7 +254,6 @@ LOG_MSG = {
     "DESIGN_RESET_ALL": "[INFO] 디자인 설정이 전체 초기화되었습니다.",
     "LAYER_ORDER_RESET": "[INFO] 레이어 순서가 초기화되었습니다.",
     "LAYER_SETTINGS_RESET": "[INFO] 레이어 설정이 초기화되었습니다.",
-
     "SAVE_SINGLE": "[SUCCESS] 이미지가 저장되었습니다.\n▶ 파일: {fname}\n▶ 위치: {folder}",
     "SAVE_SINGLE_SHORT": "이미지가 저장되었습니다: {path}",
     "BATCH_START": "[SYSTEM] 일괄 저장 작업을 시작합니다... (총 {total}건, σ={sigma})",
@@ -201,7 +261,6 @@ LOG_MSG = {
     "BATCH_SUCCESS": "일괄 저장 완료: {success_count}개의 이미지가 저장되었습니다.",
     "BATCH_ALL_FAILED": "일괄 저장 실패: {fail_count}개 파일 저장에 실패했습니다. 예시: {sample}",
     "BATCH_ALL_FAILED_BOX": "모든 이미지 저장에 실패했습니다. 로그를 확인하세요.",
-
     "RULER_ON": "[TOOL] 눈금자 측정 모드가 활성화되었습니다. 그래프 상의 두 점을 클릭하세요.",
     "RULER_OFF": "[TOOL] 눈금자 측정 모드가 종료되었습니다.",
     "RULER_OFF_INFO": "눈금자 툴이 꺼졌습니다.",
@@ -209,7 +268,6 @@ LOG_MSG = {
     "LABEL_MOVE_ON": "라벨 위치 이동 모드가 켜졌습니다. 옮길 라벨에 마우스를 올린 뒤 드래그하세요.",
     "LABEL_MOVE_SERIES": "라벨 위치 이동 대상이 변경되었습니다. ({series})",
     "LABEL_MOVE_ON_SERIES": "라벨 위치 이동 모드가 켜졌습니다. ({series} 데이터 라벨만 이동 가능)",
-
     "PLOT_OPEN_FAIL": "[오류] 다중 플롯 창 생성 실패: {e}",
     "PLOT_REFRESH_FAIL": "[오류] 다중 플롯 갱신 실패: {e}",
     "PLOT_APPLY_FAIL": "[오류] 플롯 갱신 실패: {e}",

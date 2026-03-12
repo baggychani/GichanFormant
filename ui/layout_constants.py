@@ -45,7 +45,10 @@ PLOT_WINDOW_WIDTH_PX = (
 # 도크가 하나 또는 둘 다 떼어져(플로팅) 있을 때 사용하는 창 가로(px).
 # 식: 도크 1개 + 구분선 1개 + 캔버스 영역 + 보정치.
 PLOT_WINDOW_WIDTH_FLOATING_PX = (
-    DOCK_WIDTH_PX + SEPARATOR_WIDTH_PX + PLOT_CANVAS_AREA_WIDTH_PX + PLOT_WIDTH_CORRECTION_PX
+    DOCK_WIDTH_PX
+    + SEPARATOR_WIDTH_PX
+    + PLOT_CANVAS_AREA_WIDTH_PX
+    + PLOT_WIDTH_CORRECTION_PX
 )
 
 # ---------------------------------------------------------------------------

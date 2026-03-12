@@ -11,6 +11,7 @@ _log = logging.getLogger(__name__)
 
 try:
     from scipy.spatial import cKDTree
+
     _HAS_KD = True
 except ImportError:
     cKDTree = None
@@ -54,7 +55,7 @@ class RulerTool:
             self.ui_font_name = "AppleGothic"
         else:
             self.ui_font_name = "NanumGothic"
-        self._font_family = ['DejaVu Sans', self.ui_font_name]
+        self._font_family = ["DejaVu Sans", self.ui_font_name]
 
     @staticmethod
     def _safe_remove_artist(artist, name="artist"):
@@ -72,7 +73,7 @@ class RulerTool:
         self._kdtree_px = None
         if not self.ax or not self.snapping_data:
             return
-        pts = np.array([[p['x'], p['y']] for p in self.snapping_data])
+        pts = np.array([[p["x"], p["y"]] for p in self.snapping_data])
         pts_px = self.ax.transData.transform(pts)
         self._kdtree_px = pts_px
         if _HAS_KD and len(pts_px) > 0:
@@ -81,15 +82,20 @@ class RulerTool:
     def _font_family_from_design(self, design_settings=None):
         """세리프/산세리프 설정에 따라 눈금자 거리·툴팁 텍스트용 폰트 패밀리 (IPA 불필요, 한·영 기준)."""
         if not design_settings:
-            return ['DejaVu Sans', self.ui_font_name]
-        if design_settings.get('font_style') == 'serif':
-            return ['Times New Roman', 'Noto Serif KR', 'DejaVu Serif', self.ui_font_name]
-        return ['Arial', 'Noto Sans KR', 'DejaVu Sans', self.ui_font_name]
+            return ["DejaVu Sans", self.ui_font_name]
+        if design_settings.get("font_style") == "serif":
+            return [
+                "Times New Roman",
+                "Noto Serif KR",
+                "DejaVu Serif",
+                self.ui_font_name,
+            ]
+        return ["Arial", "Noto Sans KR", "DejaVu Sans", self.ui_font_name]
 
     def set_context(self, canvas, ax, params, snapping_data=None, design_settings=None):
         self.detach()
 
-        old_measurements = getattr(self, 'measurements', [])
+        old_measurements = getattr(self, "measurements", [])
         self.measurements = []
 
         self._clear_guide_line()
@@ -106,8 +112,8 @@ class RulerTool:
         self._build_kdtree()
 
         for m in old_measurements:
-            if 'p1' in m and 'p2' in m:
-                self._redraw_measurement(m['p1'], m['p2'], m.get('text_pos'))
+            if "p1" in m and "p2" in m:
+                self._redraw_measurement(m["p1"], m["p2"], m.get("text_pos"))
 
         if self.active:
             self._connect()
@@ -126,17 +132,27 @@ class RulerTool:
 
     def _connect(self):
         if self.canvas:
-            self.cid_click = self.canvas.mpl_connect('button_press_event', self.on_click)
-            self.cid_move = self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
-            self.cid_key = self.canvas.mpl_connect('key_press_event', self.on_key_press)
-            self.cid_release = self.canvas.mpl_connect('button_release_event', self.on_release)
+            self.cid_click = self.canvas.mpl_connect(
+                "button_press_event", self.on_click
+            )
+            self.cid_move = self.canvas.mpl_connect(
+                "motion_notify_event", self.on_mouse_move
+            )
+            self.cid_key = self.canvas.mpl_connect("key_press_event", self.on_key_press)
+            self.cid_release = self.canvas.mpl_connect(
+                "button_release_event", self.on_release
+            )
 
     def detach(self):
         if self.canvas:
-            if self.cid_click: self.canvas.mpl_disconnect(self.cid_click)
-            if self.cid_move: self.canvas.mpl_disconnect(self.cid_move)
-            if self.cid_key: self.canvas.mpl_disconnect(self.cid_key)
-            if self.cid_release: self.canvas.mpl_disconnect(self.cid_release)
+            if self.cid_click:
+                self.canvas.mpl_disconnect(self.cid_click)
+            if self.cid_move:
+                self.canvas.mpl_disconnect(self.cid_move)
+            if self.cid_key:
+                self.canvas.mpl_disconnect(self.cid_key)
+            if self.cid_release:
+                self.canvas.mpl_disconnect(self.cid_release)
 
             if self.cursor_changed:
                 self.canvas.unsetCursor()
@@ -146,7 +162,7 @@ class RulerTool:
 
     def clear_all(self):
         for m in self.measurements:
-            for artist in m['artists']:
+            for artist in m["artists"]:
                 self._safe_remove_artist(artist, "measurement")
         self.measurements = []
         self._clear_snap_marker()
@@ -180,7 +196,8 @@ class RulerTool:
             self.guide_line = None
 
     def on_key_press(self, event):
-        if self.active and event.key == 'escape': self._cancel_current_drawing()
+        if self.active and event.key == "escape":
+            self._cancel_current_drawing()
 
     def on_mouse_move(self, event):
         if not self.active:
@@ -214,7 +231,7 @@ class RulerTool:
         is_hovering = False
         hovered_artist = None
         for m in self.measurements:
-            txt_artist = m['artists'][-1]  # 리스트의 마지막 객체가 Text 라벨
+            txt_artist = m["artists"][-1]  # 리스트의 마지막 객체가 Text 라벨
             contains, _ = txt_artist.contains(event)
             if contains:
                 is_hovering = True
@@ -242,7 +259,9 @@ class RulerTool:
                 d_min = float(d_min)
                 min_idx = int(min_idx)
             else:
-                pts_px = self.ax.transData.transform(np.array([[p['x'], p['y']] for p in self.snapping_data]))
+                pts_px = self.ax.transData.transform(
+                    np.array([[p["x"], p["y"]] for p in self.snapping_data])
+                )
                 dists = np.linalg.norm(pts_px - np.array([event.x, event.y]), axis=1)
                 min_idx = int(np.argmin(dists))
                 d_min = float(dists[min_idx])
@@ -263,11 +282,22 @@ class RulerTool:
         # 점과 점을 잇는 가이드 라인 업데이트
         if self.start_point_info:
             self._clear_guide_line()
-            x1, y1 = self.start_point_info['x'], self.start_point_info['y']
-            x2, y2 = (self.snapped_point['x'], self.snapped_point['y']) if self.snapped_point else (
-            event.xdata, event.ydata)
-            self.guide_line, = self.ax.plot([x1, x2], [y1, y2], color='gray', ls=':', lw=1, alpha=0.4, zorder=2,
-                                            clip_on=False)
+            x1, y1 = self.start_point_info["x"], self.start_point_info["y"]
+            x2, y2 = (
+                (self.snapped_point["x"], self.snapped_point["y"])
+                if self.snapped_point
+                else (event.xdata, event.ydata)
+            )
+            (self.guide_line,) = self.ax.plot(
+                [x1, x2],
+                [y1, y2],
+                color="gray",
+                ls=":",
+                lw=1,
+                alpha=0.4,
+                zorder=2,
+                clip_on=False,
+            )
             self.canvas.draw_idle()
 
     def on_click(self, event):
@@ -292,53 +322,90 @@ class RulerTool:
                 self.drag_start_y = event.ydata
                 return
 
-            if not self.snapped_point: return
+            if not self.snapped_point:
+                return
 
             pt = self.snapped_point
             if self.start_point_info is None:
                 self.start_point_info = pt.copy()
-                m_style = 's' if pt['type'] == 'mean' else 'o'
-                m_color = pt.get('color', 'red')
+                m_style = "s" if pt["type"] == "mean" else "o"
+                m_color = pt.get("color", "red")
 
-                self.start_marker, = self.ax.plot(pt['x'], pt['y'], m_style,
-                                                  markersize=12 if pt['type'] == 'mean' else 10,
-                                                  markerfacecolor='none', markeredgecolor=m_color, markeredgewidth=2,
-                                                  zorder=101, clip_on=False)
+                (self.start_marker,) = self.ax.plot(
+                    pt["x"],
+                    pt["y"],
+                    m_style,
+                    markersize=12 if pt["type"] == "mean" else 10,
+                    markerfacecolor="none",
+                    markeredgecolor=m_color,
+                    markeredgewidth=2,
+                    zorder=101,
+                    clip_on=False,
+                )
                 self.canvas.draw_idle()
             else:
                 p1, p2 = self.start_point_info, pt
-                if p1['x'] == p2['x'] and p1['y'] == p2['y']: return
+                if p1["x"] == p2["x"] and p1["y"] == p2["y"]:
+                    return
 
                 self._clear_guide_line()
                 artists = []
-                line, = self.ax.plot([p1['x'], p2['x']], [p1['y'], p2['y']], 'k-', linewidth=1.2, alpha=0.7, zorder=2,
-                                     clip_on=False)
+                (line,) = self.ax.plot(
+                    [p1["x"], p2["x"]],
+                    [p1["y"], p2["y"]],
+                    "k-",
+                    linewidth=1.2,
+                    alpha=0.7,
+                    zorder=2,
+                    clip_on=False,
+                )
                 artists.extend([line, self.start_marker])
 
-                m_style = 's' if p2['type'] == 'mean' else 'o'
-                m_color = p2.get('color', 'red')
+                m_style = "s" if p2["type"] == "mean" else "o"
+                m_color = p2.get("color", "red")
 
-                end_m, = self.ax.plot(p2['x'], p2['y'], m_style, markersize=12 if p2['type'] == 'mean' else 10,
-                                      markerfacecolor='none', markeredgecolor=m_color, markeredgewidth=2, zorder=101,
-                                      clip_on=False)
+                (end_m,) = self.ax.plot(
+                    p2["x"],
+                    p2["y"],
+                    m_style,
+                    markersize=12 if p2["type"] == "mean" else 10,
+                    markerfacecolor="none",
+                    markeredgecolor=m_color,
+                    markeredgewidth=2,
+                    zorder=101,
+                    clip_on=False,
+                )
                 artists.append(end_m)
 
                 dist_text = self._calculate_real_distance(p1, p2)
-                mid_x, mid_y = (p1['x'] + p2['x']) / 2, (p1['y'] + p2['y']) / 2
+                mid_x, mid_y = (p1["x"] + p2["x"]) / 2, (p1["y"] + p2["y"]) / 2
 
-                txt = self.ax.text(mid_x, mid_y, dist_text,
-                                   ha='center', va='bottom', color='black', fontsize=10, fontweight='bold',
-                                   fontfamily=self._font_family, zorder=102,
-                                   bbox=dict(facecolor='#ffffdd', alpha=0.6, edgecolor='orange', pad=2),
-                                   clip_on=False)
+                txt = self.ax.text(
+                    mid_x,
+                    mid_y,
+                    dist_text,
+                    ha="center",
+                    va="bottom",
+                    color="black",
+                    fontsize=10,
+                    fontweight="bold",
+                    fontfamily=self._font_family,
+                    zorder=102,
+                    bbox=dict(
+                        facecolor="#ffffdd", alpha=0.6, edgecolor="orange", pad=2
+                    ),
+                    clip_on=False,
+                )
                 artists.append(txt)
 
-                self.measurements.append({
-                    'artists': artists,
-                    'p1': p1.copy(),
-                    'p2': p2.copy(),
-                    'text_pos': (mid_x, mid_y)
-                })
+                self.measurements.append(
+                    {
+                        "artists": artists,
+                        "p1": p1.copy(),
+                        "p2": p2.copy(),
+                        "text_pos": (mid_x, mid_y),
+                    }
+                )
                 self.canvas.draw_idle()
                 self.start_point_info = self.start_marker = None
 
@@ -346,71 +413,84 @@ class RulerTool:
         """[추가] 좌클릭을 떼었을 때 드래그 상태 해제 및 새 위치 저장"""
         if event.button == 1 and self.dragging_text:
             for m in self.measurements:
-                if m['artists'][-1] == self.dragging_text:
+                if m["artists"][-1] == self.dragging_text:
                     # 마우스를 놓은 위치의 좌표를 기억 (화면 리프레시 방어용)
-                    m['text_pos'] = self.dragging_text.get_position()
+                    m["text_pos"] = self.dragging_text.get_position()
                     break
             self.dragging_text = None
 
     def _draw_snap_marker(self, pt):
         self._clear_snap_marker()
-        x, y = pt['x'], pt['y']
-        if self.start_point_info and (x == self.start_point_info['x'] and y == self.start_point_info['y']): return
+        x, y = pt["x"], pt["y"]
+        if self.start_point_info and (
+            x == self.start_point_info["x"] and y == self.start_point_info["y"]
+        ):
+            return
 
-        m_style = 's' if pt['type'] == 'mean' else 'o'
-        m_color = pt.get('color', 'red')
+        m_style = "s" if pt["type"] == "mean" else "o"
+        m_color = pt.get("color", "red")
 
-        self.snap_marker, = self.ax.plot(x, y, m_style, markersize=12 if pt['type'] == 'mean' else 10,
-                                         markerfacecolor='none', markeredgecolor=m_color, markeredgewidth=2, zorder=200,
-                                         clip_on=False)
+        (self.snap_marker,) = self.ax.plot(
+            x,
+            y,
+            m_style,
+            markersize=12 if pt["type"] == "mean" else 10,
+            markerfacecolor="none",
+            markeredgecolor=m_color,
+            markeredgewidth=2,
+            zorder=200,
+            clip_on=False,
+        )
         self.canvas.draw_idle()
 
     def _draw_tooltip(self, pt):
         self._clear_tooltip()
 
-        label = pt.get('label', pt.get('Label'))
-        if not label and pt.get('type') == 'mean':
-            min_dist = float('inf')
+        label = pt.get("label", pt.get("Label"))
+        if not label and pt.get("type") == "mean":
+            min_dist = float("inf")
             for other_pt in self.snapping_data:
-                if other_pt.get('type') == 'raw' and ('label' in other_pt or 'Label' in other_pt):
-                    d = (other_pt['x'] - pt['x']) ** 2 + (other_pt['y'] - pt['y']) ** 2
+                if other_pt.get("type") == "raw" and (
+                    "label" in other_pt or "Label" in other_pt
+                ):
+                    d = (other_pt["x"] - pt["x"]) ** 2 + (other_pt["y"] - pt["y"]) ** 2
                     if d < min_dist:
                         min_dist = d
-                        label = other_pt.get('label', other_pt.get('Label'))
+                        label = other_pt.get("label", other_pt.get("Label"))
         if not label:
-            label = 'Unknown'
+            label = "Unknown"
 
-        f1_orig = pt.get('raw_f1', 0)
-        f2_orig = pt.get('raw_f2', 0)
-        f3_orig = pt.get('raw_f3', 0)
+        f1_orig = pt.get("raw_f1", 0)
+        f2_orig = pt.get("raw_f2", 0)
+        f3_orig = pt.get("raw_f3", 0)
 
-        use_bark = self.params.get('use_bark_units', False)
-        is_norm = bool(self.params.get('normalization'))
+        use_bark = self.params.get("use_bark_units", False)
+        is_norm = bool(self.params.get("normalization"))
         unit = "" if is_norm else ("Bk" if use_bark else "Hz")
 
         def convert(val):
             return hz_to_bark(val) if use_bark else val
 
-        plot_type = self.params.get('type', 'f1_f2')
+        plot_type = self.params.get("type", "f1_f2")
 
         if is_norm:
             y_name, x_name = "nF1", "nF2"
-            val_y, val_x = pt['y'], pt['x']
+            val_y, val_x = pt["y"], pt["x"]
         else:
             y_name = "F1"
             val_y = convert(f1_orig)
-            if plot_type == 'f1_f2_minus_f1':
+            if plot_type == "f1_f2_minus_f1":
                 x_name = "F2 - F1"
                 val_x = convert(f2_orig) - convert(f1_orig)
-            elif plot_type == 'f1_f3':
+            elif plot_type == "f1_f3":
                 x_name = "F3"
-                val_x = convert(f3_orig) if f3_orig else pt['x']
-            elif plot_type == 'f1_f2_prime':
+                val_x = convert(f3_orig) if f3_orig else pt["x"]
+            elif plot_type == "f1_f2_prime":
                 x_name = "F2'"
-                val_x = pt['x']
-            elif plot_type == 'f1_f2_prime_minus_f1':
+                val_x = pt["x"]
+            elif plot_type == "f1_f2_prime_minus_f1":
                 x_name = "F2' - F1"
-                val_x = pt['x']
+                val_x = pt["x"]
             else:
                 x_name = "F2"
                 val_x = convert(f2_orig)
@@ -418,13 +498,17 @@ class RulerTool:
         if is_norm:
             info_text = f"[{label}]\n{y_name}: {val_y:.4g}\n{x_name}: {val_x:.4g}"
         elif use_bark:
-            info_text = f"[{label}]\n{y_name}: {val_y:.2f} {unit}\n{x_name}: {val_x:.2f} {unit}"
+            info_text = (
+                f"[{label}]\n{y_name}: {val_y:.2f} {unit}\n{x_name}: {val_x:.2f} {unit}"
+            )
         else:
-            info_text = f"[{label}]\n{y_name}: {val_y:.0f} {unit}\n{x_name}: {val_x:.0f} {unit}"
+            info_text = (
+                f"[{label}]\n{y_name}: {val_y:.0f} {unit}\n{x_name}: {val_x:.0f} {unit}"
+            )
 
         # 툴팁 좌/우: 데이터가 아닌 화면 픽셀 기준으로 판단 (F2 반전 시 잘림 방지)
         try:
-            pt_disp = self.ax.transData.transform((pt['x'], pt['y']))
+            pt_disp = self.ax.transData.transform((pt["x"], pt["y"]))
             ax_bbox = self.ax.get_window_extent(self.canvas.get_renderer())
             center_x_px = ax_bbox.x0 + ax_bbox.width * 0.5
             tooltip_offset = (-15, 15) if pt_disp[0] > center_x_px else (15, 15)
@@ -433,80 +517,124 @@ class RulerTool:
 
         self.tooltip_text = self.ax.annotate(
             info_text,
-            xy=(pt['x'], pt['y']),
+            xy=(pt["x"], pt["y"]),
             xytext=tooltip_offset,
-            textcoords='offset points',
+            textcoords="offset points",
             bbox=dict(boxstyle="round,pad=0.3", fc="#ffffe0", ec="gray", alpha=0.9),
             fontsize=9,
-            color='black',
+            color="black",
             fontfamily=self._font_family,
             zorder=300,
-            clip_on=False
+            clip_on=False,
         )
         self.canvas.draw_idle()
 
     def _redraw_measurement(self, old_p1, old_p2, text_pos=None):
-        new_p1 = next((pt for pt in self.snapping_data if
-                       pt['raw_f1'] == old_p1['raw_f1'] and pt['raw_f2'] == old_p1['raw_f2'] and pt['type'] == old_p1[
-                           'type']), None)
-        new_p2 = next((pt for pt in self.snapping_data if
-                       pt['raw_f1'] == old_p2['raw_f1'] and pt['raw_f2'] == old_p2['raw_f2'] and pt['type'] == old_p2[
-                           'type']), None)
+        new_p1 = next(
+            (
+                pt
+                for pt in self.snapping_data
+                if pt["raw_f1"] == old_p1["raw_f1"]
+                and pt["raw_f2"] == old_p1["raw_f2"]
+                and pt["type"] == old_p1["type"]
+            ),
+            None,
+        )
+        new_p2 = next(
+            (
+                pt
+                for pt in self.snapping_data
+                if pt["raw_f1"] == old_p2["raw_f1"]
+                and pt["raw_f2"] == old_p2["raw_f2"]
+                and pt["type"] == old_p2["type"]
+            ),
+            None,
+        )
 
         if not new_p1 or not new_p2:
             return
 
         artists = []
-        line, = self.ax.plot([new_p1['x'], new_p2['x']], [new_p1['y'], new_p2['y']], 'k-', linewidth=1.2, alpha=0.7,
-                             zorder=2, clip_on=False)
+        (line,) = self.ax.plot(
+            [new_p1["x"], new_p2["x"]],
+            [new_p1["y"], new_p2["y"]],
+            "k-",
+            linewidth=1.2,
+            alpha=0.7,
+            zorder=2,
+            clip_on=False,
+        )
         artists.append(line)
 
-        m1_style = 's' if new_p1['type'] == 'mean' else 'o'
-        m1_color = new_p1.get('color', 'red')
-        start_m, = self.ax.plot(new_p1['x'], new_p1['y'], m1_style, markersize=12 if new_p1['type'] == 'mean' else 10,
-                                markerfacecolor='none', markeredgecolor=m1_color, markeredgewidth=2, zorder=101,
-                                clip_on=False)
+        m1_style = "s" if new_p1["type"] == "mean" else "o"
+        m1_color = new_p1.get("color", "red")
+        (start_m,) = self.ax.plot(
+            new_p1["x"],
+            new_p1["y"],
+            m1_style,
+            markersize=12 if new_p1["type"] == "mean" else 10,
+            markerfacecolor="none",
+            markeredgecolor=m1_color,
+            markeredgewidth=2,
+            zorder=101,
+            clip_on=False,
+        )
         artists.append(start_m)
 
-        m2_style = 's' if new_p2['type'] == 'mean' else 'o'
-        m2_color = new_p2.get('color', 'red')
-        end_m, = self.ax.plot(new_p2['x'], new_p2['y'], m2_style, markersize=12 if new_p2['type'] == 'mean' else 10,
-                              markerfacecolor='none', markeredgecolor=m2_color, markeredgewidth=2, zorder=101,
-                              clip_on=False)
+        m2_style = "s" if new_p2["type"] == "mean" else "o"
+        m2_color = new_p2.get("color", "red")
+        (end_m,) = self.ax.plot(
+            new_p2["x"],
+            new_p2["y"],
+            m2_style,
+            markersize=12 if new_p2["type"] == "mean" else 10,
+            markerfacecolor="none",
+            markeredgecolor=m2_color,
+            markeredgewidth=2,
+            zorder=101,
+            clip_on=False,
+        )
         artists.append(end_m)
 
         dist_text = self._calculate_real_distance(new_p1, new_p2)
-        mid_x, mid_y = (new_p1['x'] + new_p2['x']) / 2, (new_p1['y'] + new_p2['y']) / 2
+        mid_x, mid_y = (new_p1["x"] + new_p2["x"]) / 2, (new_p1["y"] + new_p2["y"]) / 2
 
         if text_pos:
             txt_x, txt_y = text_pos
         else:
             txt_x, txt_y = mid_x, mid_y
 
-        txt = self.ax.text(txt_x, txt_y, dist_text,
-                           ha='center', va='bottom', color='black', fontsize=10, fontweight='bold',
-                           fontfamily=self._font_family, zorder=102,
-                           bbox=dict(facecolor='#ffffdd', alpha=0.6, edgecolor='orange', pad=2),
-                           clip_on=False)
+        txt = self.ax.text(
+            txt_x,
+            txt_y,
+            dist_text,
+            ha="center",
+            va="bottom",
+            color="black",
+            fontsize=10,
+            fontweight="bold",
+            fontfamily=self._font_family,
+            zorder=102,
+            bbox=dict(facecolor="#ffffdd", alpha=0.6, edgecolor="orange", pad=2),
+            clip_on=False,
+        )
         artists.append(txt)
 
-        self.measurements.append({
-            'artists': artists,
-            'p1': new_p1,
-            'p2': new_p2,
-            'text_pos': (txt_x, txt_y)
-        })
+        self.measurements.append(
+            {"artists": artists, "p1": new_p1, "p2": new_p2, "text_pos": (txt_x, txt_y)}
+        )
 
     def _delete_nearest_measurement(self, event):
         """[수정] 라벨 클릭 검사를 우선 수행하고, 없으면 선분 근처 클릭 검사로 넘어감"""
-        if not self.measurements: return
+        if not self.measurements:
+            return
 
         click_x, click_y = event.x, event.y
         idx_to_remove = -1
 
         # 1순위 검사: 내가 옮겨놓은 라벨 텍스트 박스를 정확히 우클릭했는가?
         for i, m in enumerate(self.measurements):
-            txt_artist = m['artists'][-1]
+            txt_artist = m["artists"][-1]
             contains, _ = txt_artist.contains(event)
             if contains:
                 idx_to_remove = i
@@ -514,15 +642,24 @@ class RulerTool:
 
         # 2순위 검사: 라벨을 클릭한게 아니라면 선의 중심이나 선 자체를 클릭했는가?
         if idx_to_remove == -1:
-            min_dist = float('inf')
+            min_dist = float("inf")
             for i, m in enumerate(self.measurements):
-                p1, p2 = m['p1'], m['p2']
-                pts_px = self.ax.transData.transform([[p1['x'], p1['y']], [p2['x'], p2['y']]])
-                mid_x, mid_y = (p1['x'] + p2['x']) / 2, (p1['y'] + p2['y']) / 2
+                p1, p2 = m["p1"], m["p2"]
+                pts_px = self.ax.transData.transform(
+                    [[p1["x"], p1["y"]], [p2["x"], p2["y"]]]
+                )
+                mid_x, mid_y = (p1["x"] + p2["x"]) / 2, (p1["y"] + p2["y"]) / 2
                 center_px = self.ax.transData.transform((mid_x, mid_y))
 
                 d_center = np.hypot(click_x - center_px[0], click_y - center_px[1])
-                d_line = self._dist_to_segment(click_x, click_y, pts_px[0][0], pts_px[0][1], pts_px[1][0], pts_px[1][1])
+                d_line = self._dist_to_segment(
+                    click_x,
+                    click_y,
+                    pts_px[0][0],
+                    pts_px[0][1],
+                    pts_px[1][0],
+                    pts_px[1][1],
+                )
                 d_final = min(d_center, d_line)
 
                 if d_final < min_dist:
@@ -534,25 +671,26 @@ class RulerTool:
 
         # 최종 삭제 처리
         if idx_to_remove != -1:
-            for artist in self.measurements[idx_to_remove]['artists']:
+            for artist in self.measurements[idx_to_remove]["artists"]:
                 self._safe_remove_artist(artist, "measurement")
             self.measurements.pop(idx_to_remove)
             self.canvas.draw_idle()
 
     def _dist_to_segment(self, px, py, x1, y1, x2, y2):
         dx, dy = x2 - x1, y2 - y1
-        if dx == dy == 0: return np.hypot(px - x1, py - y1)
+        if dx == dy == 0:
+            return np.hypot(px - x1, py - y1)
         t = max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
         return np.hypot(px - (x1 + t * dx), py - (y1 + t * dy))
 
     def _calculate_real_distance(self, p1, p2):
-        if self.params.get('normalization'):
-            d = np.sqrt((p1['x'] - p2['x']) ** 2 + (p1['y'] - p2['y']) ** 2)
+        if self.params.get("normalization"):
+            d = np.sqrt((p1["x"] - p2["x"]) ** 2 + (p1["y"] - p2["y"]) ** 2)
             if np.isnan(d):
                 return "—"
             return f"{d:.4g}"
-        f1a, f2a = p1['raw_f1'], p1['raw_f2']
-        f1b, f2b = p2['raw_f1'], p2['raw_f2']
+        f1a, f2a = p1["raw_f1"], p1["raw_f2"]
+        f1b, f2b = p2["raw_f1"], p2["raw_f2"]
 
         z1_f1, z1_f2 = hz_to_bark(f1a), hz_to_bark(f2a)
         z2_f1, z2_f2 = hz_to_bark(f1b), hz_to_bark(f2b)
@@ -562,8 +700,8 @@ class RulerTool:
         if np.isnan(dist_hz) or np.isnan(dist_bk):
             return "—"
 
-        scale_type = self.params.get('f2_scale', 'linear')
-        if scale_type == 'bark':
+        scale_type = self.params.get("f2_scale", "linear")
+        if scale_type == "bark":
             return f"{dist_bk:.2f} Bk ≒ {dist_hz:.0f} Hz"
         else:
             return f"{dist_hz:.0f} Hz ≒ {dist_bk:.2f} Bk"

@@ -3,21 +3,51 @@
 import os
 import platform
 import base64
-from PyQt6.QtWidgets import (QDialog, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-                             QGridLayout, QLabel, QPushButton, QListWidget, QListWidgetItem,
-                             QDockWidget, QGroupBox, QLineEdit, QComboBox, QMessageBox,
-                             QFrame, QAbstractItemView, QTabWidget, QApplication, QSizePolicy,
-                             QStackedWidget)
+from PyQt6.QtWidgets import (
+    QDialog,
+    QMainWindow,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QGridLayout,
+    QLabel,
+    QPushButton,
+    QListWidget,
+    QListWidgetItem,
+    QDockWidget,
+    QGroupBox,
+    QLineEdit,
+    QComboBox,
+    QMessageBox,
+    QFrame,
+    QAbstractItemView,
+    QTabWidget,
+    QApplication,
+    QSizePolicy,
+    QStackedWidget,
+)
 from PyQt6.QtCore import Qt, QObject, QEvent
 
 
 class TabBarWheelBlocker(QObject):
     """탭 위에서 마우스 휠로 탭이 바뀌지 않도록 휠 이벤트를 흡수합니다."""
+
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.Wheel:
             return True
         return False
-from PyQt6.QtGui import QFont, QIcon, QPixmap, QShortcut, QKeySequence, QPainter, QPen, QColor
+
+
+from PyQt6.QtGui import (
+    QFont,
+    QIcon,
+    QPixmap,
+    QShortcut,
+    QKeySequence,
+    QPainter,
+    QPen,
+    QColor,
+)
 
 from .canvas_fixed import FixedFigureCanvas
 
@@ -37,21 +67,42 @@ from . import layout_constants as layout
 
 class RangeInputFilter(QObject):
     """좌표축 범위 입력란: 숫자·소수점·마이너스 외 키는 입력되지 않게 막고 포커스 해제."""
-    ALLOWED_KEYS = frozenset({
-        Qt.Key.Key_0, Qt.Key.Key_1, Qt.Key.Key_2, Qt.Key.Key_3, Qt.Key.Key_4,
-        Qt.Key.Key_5, Qt.Key.Key_6, Qt.Key.Key_7, Qt.Key.Key_8, Qt.Key.Key_9,
-        Qt.Key.Key_Period, Qt.Key.Key_Minus,
-        Qt.Key.Key_Backspace, Qt.Key.Key_Delete,
-        Qt.Key.Key_Left, Qt.Key.Key_Right, Qt.Key.Key_Home, Qt.Key.Key_End,
-        Qt.Key.Key_Tab, Qt.Key.Key_Return, Qt.Key.Key_Enter,
-    })
+
+    ALLOWED_KEYS = frozenset(
+        {
+            Qt.Key.Key_0,
+            Qt.Key.Key_1,
+            Qt.Key.Key_2,
+            Qt.Key.Key_3,
+            Qt.Key.Key_4,
+            Qt.Key.Key_5,
+            Qt.Key.Key_6,
+            Qt.Key.Key_7,
+            Qt.Key.Key_8,
+            Qt.Key.Key_9,
+            Qt.Key.Key_Period,
+            Qt.Key.Key_Minus,
+            Qt.Key.Key_Backspace,
+            Qt.Key.Key_Delete,
+            Qt.Key.Key_Left,
+            Qt.Key.Key_Right,
+            Qt.Key.Key_Home,
+            Qt.Key.Key_End,
+            Qt.Key.Key_Tab,
+            Qt.Key.Key_Return,
+            Qt.Key.Key_Enter,
+        }
+    )
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.Type.KeyPress:
             key = event.key()
             mods = event.modifiers()
             if mods & Qt.KeyboardModifier.ControlModifier and key in (
-                Qt.Key.Key_A, Qt.Key.Key_C, Qt.Key.Key_V, Qt.Key.Key_X
+                Qt.Key.Key_A,
+                Qt.Key.Key_C,
+                Qt.Key.Key_V,
+                Qt.Key.Key_X,
             ):
                 return False
             if key in self.ALLOWED_KEYS:
@@ -73,7 +124,10 @@ class SelectCompareDialog(QDialog):
         self.current_idx = current_idx
 
         self.setWindowTitle("비교할 데이터 선택")
-        self.setFixedSize(config.DIALOG_SELECT_COMPARE_WIDTH_PX, config.DIALOG_SELECT_COMPARE_HEIGHT_PX)
+        self.setFixedSize(
+            config.DIALOG_SELECT_COMPARE_WIDTH_PX,
+            config.DIALOG_SELECT_COMPARE_HEIGHT_PX,
+        )
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self._apply_pyqt6_icon()
@@ -118,14 +172,16 @@ class SelectCompareDialog(QDialog):
         layout.addWidget(lbl_title)
 
         current_item = self.controller.get_data_item_at(self.current_idx)
-        current_name = current_item['name'] if current_item else ""
+        current_name = current_item["name"] if current_item else ""
         self.lbl_current_file = QLabel(f"현재 파일: {current_name}")
         self.lbl_current_file.setFont(QFont("Malgun Gothic", 10))
         self.lbl_current_file.setStyleSheet("color: #606266; padding: 4px 0;")
         layout.addWidget(self.lbl_current_file)
 
         self.list_widget = QListWidget()
-        self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.list_widget.setSelectionMode(
+            QAbstractItemView.SelectionMode.SingleSelection
+        )
         self.list_widget.itemDoubleClicked.connect(self.on_confirm)
         self.list_widget.itemActivated.connect(self.on_confirm)
         layout.addWidget(self.list_widget)
@@ -187,15 +243,21 @@ class SelectCompareDialog(QDialog):
         return set(df[col].dropna().astype(str).str.strip().str.lower())
 
     def on_confirm(self):
-        if getattr(self, '_confirming', False):
+        if getattr(self, "_confirming", False):
             return
         selected_item = self.list_widget.currentItem()
         if not selected_item:
-            QMessageBox.warning(self, "선택 오류", "비교할 대상을 올바르게 선택해주세요.")
+            QMessageBox.warning(
+                self, "선택 오류", "비교할 대상을 올바르게 선택해주세요."
+            )
             return
 
         target_idx = selected_item.data(Qt.ItemDataRole.UserRole)
-        norm = self.combo_normalization.currentData() if self.combo_normalization.isEnabled() else None
+        norm = (
+            self.combo_normalization.currentData()
+            if self.combo_normalization.isEnabled()
+            else None
+        )
         if norm == "2mW/F":
             cur_item = self.controller.get_data_item_at(self.current_idx)
             tgt_item = self.controller.get_data_item_at(target_idx)
@@ -203,8 +265,9 @@ class SelectCompareDialog(QDialog):
             lr = self._labels_in_df(tgt_item["df"]) if tgt_item else set()
             if not ({"i", "a"} <= lb and {"i", "a"} <= lr):
                 QMessageBox.warning(
-                    self, "정규화 불가",
-                    "2mW/F 정규화는 두 파일 모두 모음 i, a가 필요합니다."
+                    self,
+                    "정규화 불가",
+                    "2mW/F 정규화는 두 파일 모두 모음 i, a가 필요합니다.",
                 )
                 return
         elif norm == "Bigham":
@@ -215,8 +278,9 @@ class SelectCompareDialog(QDialog):
             required = {"i", "a", "o", "u"}
             if not (required <= lb and required <= lr):
                 QMessageBox.warning(
-                    self, "정규화 불가",
-                    "Bigham 정규화는 두 파일 모두 모음 i, a, o, u가 필요합니다."
+                    self,
+                    "정규화 불가",
+                    "Bigham 정규화는 두 파일 모두 모음 i, a, o, u가 필요합니다.",
                 )
                 return
 
@@ -225,7 +289,12 @@ class SelectCompareDialog(QDialog):
         self.list_widget.setEnabled(False)
 
         self.accept()
-        self.controller.open_compare_plot(self.current_idx, target_idx, normalization=norm, parent_window=self.parent())
+        self.controller.open_compare_plot(
+            self.current_idx,
+            target_idx,
+            normalization=norm,
+            parent_window=self.parent(),
+        )
 
 
 class ComparePlotPopup(QMainWindow):
@@ -233,7 +302,16 @@ class ComparePlotPopup(QMainWindow):
     두 데이터 세트 간의 포먼트 분포 차이를 시각적으로 대조 분석하는 다중 플롯 창입니다.
     """
 
-    def __init__(self, parent, controller, figure, idx_blue, idx_red, x_axis_label="F2", normalization=None):
+    def __init__(
+        self,
+        parent,
+        controller,
+        figure,
+        idx_blue,
+        idx_red,
+        x_axis_label="F2",
+        normalization=None,
+    ):
         super().__init__(parent)
 
         self.controller = controller
@@ -263,28 +341,39 @@ class ComparePlotPopup(QMainWindow):
         self.design_settings = {}
 
         # 범례 위젯들을 저장하여 실시간 렌더링에 사용
-        self.legend_refs = {'blue': {}, 'red': {}}
+        self.legend_refs = {"blue": {}, "red": {}}
 
-        data_blue_item, data_red_item = self.controller.get_compare_data(self.idx_blue, self.idx_red)
-        data_blue = data_blue_item['name'] if data_blue_item else ''
-        data_red = data_red_item['name'] if data_red_item else ''
-        self.default_save_name = f"{os.path.splitext(data_blue)[0]}_{os.path.splitext(data_red)[0]}"
+        data_blue_item, data_red_item = self.controller.get_compare_data(
+            self.idx_blue, self.idx_red
+        )
+        data_blue = data_blue_item["name"] if data_blue_item else ""
+        data_red = data_red_item["name"] if data_red_item else ""
+        self.default_save_name = (
+            f"{os.path.splitext(data_blue)[0]}_{os.path.splitext(data_red)[0]}"
+        )
 
         self._update_compare_window_title(data_blue, data_red)
         self.resize(layout.PLOT_WINDOW_WIDTH_PX, config.PLOT_WINDOW_HEIGHT_PX)
-        self.ui_font_name = config.UI_FONT_WINDOWS if platform.system() == "Windows" else config.UI_FONT_MAC
+        self.ui_font_name = (
+            config.UI_FONT_WINDOWS
+            if platform.system() == "Windows"
+            else config.UI_FONT_MAC
+        )
 
         self.setCorner(Qt.Corner.TopLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
         self.setCorner(Qt.Corner.BottomLeftCorner, Qt.DockWidgetArea.LeftDockWidgetArea)
         self.setCorner(Qt.Corner.TopRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
-        self.setCorner(Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea)
+        self.setCorner(
+            Qt.Corner.BottomRightCorner, Qt.DockWidgetArea.RightDockWidgetArea
+        )
 
         self.setDockOptions(QMainWindow.DockOption.AnimatedDocks)
         self.setDockNestingEnabled(False)
 
         self._apply_pyqt6_icon()
 
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QMainWindow {{ background-color: #F5F7FA; }}
             QWidget#CentralWidget {{ background-color: transparent; }}
 
@@ -304,7 +393,8 @@ class ComparePlotPopup(QMainWindow):
             }}
             QTabBar::tab:selected {{ background: #FFFFFF; color: #303133; font-weight: bold; }}
             QTabBar::tab:hover:!selected {{ background: #EBEEF5; color: #409EFF; }}
-        """.format(config.TAB_BAR_MIN_WIDTH_PX))
+        """.format(config.TAB_BAR_MIN_WIDTH_PX)
+        )
 
         self.current_unit = "Hz"
         self._setup_ui(data_blue, data_red)
@@ -345,16 +435,25 @@ class ComparePlotPopup(QMainWindow):
 
         self.sep_left = QFrame()
         self.sep_left.setFixedWidth(layout.SEPARATOR_WIDTH_PX)
-        self.sep_left.setStyleSheet("background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR)
+        self.sep_left.setStyleSheet(
+            "background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR
+        )
 
         self.sep_right = QFrame()
         self.sep_right.setFixedWidth(layout.SEPARATOR_WIDTH_PX)
-        self.sep_right.setStyleSheet("background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR)
+        self.sep_right.setStyleSheet(
+            "background-color: %s; border: none;" % config.SEPARATOR_BG_COLOR
+        )
 
         canvas_container = QWidget()
         canvas_container.setStyleSheet("background-color: white;")
         central_layout = QVBoxLayout(canvas_container)
-        central_layout.setContentsMargins(config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX, config.CENTRAL_LAYOUT_MARGIN_PX)
+        central_layout.setContentsMargins(
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+            config.CENTRAL_LAYOUT_MARGIN_PX,
+        )
         central_layout.setSpacing(4)
 
         # 상단 우측에 눈금자/라벨 이동 상태 인디케이터 박스 배치
@@ -362,7 +461,9 @@ class ComparePlotPopup(QMainWindow):
         top_row.setContentsMargins(0, 0, 0, 0)
         top_row.setSpacing(0)
         top_row.addStretch()
-        self.tool_indicator = ToolStatusIndicator(canvas_container, ui_font_name=self.ui_font_name, show_lock=False)
+        self.tool_indicator = ToolStatusIndicator(
+            canvas_container, ui_font_name=self.ui_font_name, show_lock=False
+        )
         top_row.addWidget(self.tool_indicator, alignment=Qt.AlignmentFlag.AlignRight)
         central_layout.addLayout(top_row)
 
@@ -383,13 +484,19 @@ class ComparePlotPopup(QMainWindow):
 
     def _build_unified_dock(self, data_blue, data_red):
         self.dock_widget = QDockWidget("도구 및 설정", self)
-        self.dock_widget.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.dock_widget.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
         self.dock_widget.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
 
         self.dock_container = QWidget()
         self.dock_container.setObjectName("DockContainer")
-        self.dock_container.setStyleSheet("#DockContainer { background-color: #FFFFFF; }")
+        self.dock_container.setStyleSheet(
+            "#DockContainer { background-color: #FFFFFF; }"
+        )
         self.dock_container.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self.dock_container.setMaximumWidth(layout.DOCK_WIDTH_PX)
 
@@ -411,22 +518,28 @@ class ComparePlotPopup(QMainWindow):
             name_red=data_red,
             parent=self,
             ui_font_name=self.ui_font_name,
-            is_normalized=bool(self.normalization)
+            is_normalized=bool(self.normalization),
         )
         self.design_settings = self.design_tab.get_current_settings()
         self.design_tab.settings_changed.connect(self._on_design_settings_changed)
 
         # --- [수정된 부분] 시그널 실행 순서 강제 재배치 ---
         try:
-            self.design_tab.btn_reset.clicked.disconnect(self.design_tab._reset_to_defaults)  # 1. 기본 화면 새로고침 끊기
+            self.design_tab.btn_reset.clicked.disconnect(
+                self.design_tab._reset_to_defaults
+            )  # 1. 기본 화면 새로고침 끊기
         except TypeError:
             pass
 
         self.design_tab.btn_reset.clicked.connect(
-            lambda: app_logger.info(config.LOG_MSG["DESIGN_RESET_ALL"]))  # 2. 로그 기록
+            lambda: app_logger.info(config.LOG_MSG["DESIGN_RESET_ALL"])
+        )  # 2. 로그 기록
         self.design_tab.btn_reset.clicked.connect(
-            lambda: self.controller.clear_label_offsets_for_popup(self))  # 3. 데이터 먼저 삭제
-        self.design_tab.btn_reset.clicked.connect(self.design_tab._reset_to_defaults)  # 4. 그 다음에 화면 그리기
+            lambda: self.controller.clear_label_offsets_for_popup(self)
+        )  # 3. 데이터 먼저 삭제
+        self.design_tab.btn_reset.clicked.connect(
+            self.design_tab._reset_to_defaults
+        )  # 4. 그 다음에 화면 그리기
         # ---------------------------------------------------
 
         self.design_tab.label_move_clicked.connect(self._on_compare_label_move_clicked)
@@ -442,46 +555,84 @@ class ComparePlotPopup(QMainWindow):
         self.dock_widget.topLevelChanged.connect(self._on_dock_state_changed)
 
         # 레이어 설정 도크 (우측 별도 도크). 파일 선택 버튼은 layer_dock 내부(레이어 탭, 전체 눈/반투명 행 바로 위)에 있음.
-        data_blue_item, data_red_item = self.controller.get_compare_data(self.idx_blue, self.idx_red)
-        name_blue = (data_blue_item or {}).get('name', data_blue)
-        name_red = (data_red_item or {}).get('name', data_red)
+        data_blue_item, data_red_item = self.controller.get_compare_data(
+            self.idx_blue, self.idx_red
+        )
+        name_blue = (data_blue_item or {}).get("name", data_blue)
+        name_red = (data_red_item or {}).get("name", data_red)
 
         self.layer_dock_widget = QDockWidget("레이어 설정", self)
-        self.layer_dock_widget.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea)
+        self.layer_dock_widget.setAllowedAreas(
+            Qt.DockWidgetArea.LeftDockWidgetArea | Qt.DockWidgetArea.RightDockWidgetArea
+        )
         self.layer_dock_widget.setFeatures(
-            QDockWidget.DockWidgetFeature.DockWidgetMovable | QDockWidget.DockWidgetFeature.DockWidgetFloatable)
+            QDockWidget.DockWidgetFeature.DockWidgetMovable
+            | QDockWidget.DockWidgetFeature.DockWidgetFloatable
+        )
         self.layer_dock_widget.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self.layer_dock_widget.setMaximumWidth(layout.DOCK_WIDTH_PX)
         self._layer_dock_container = QWidget()
         self._layer_dock_container.setObjectName("LayerDockContainer")
-        self._layer_dock_container.setStyleSheet("#LayerDockContainer { background-color: #FFFFFF; }")
+        self._layer_dock_container.setStyleSheet(
+            "#LayerDockContainer { background-color: #FFFFFF; }"
+        )
         self._layer_dock_container.setMinimumWidth(layout.DOCK_WIDTH_PX)
         self._layer_dock_container.setMaximumWidth(layout.DOCK_WIDTH_PX)
-        self._layer_dock_container.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
+        self._layer_dock_container.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding
+        )
         layer_dock_layout = QVBoxLayout(self._layer_dock_container)
         layer_dock_layout.setContentsMargins(0, 0, 0, 0)
         layer_dock_layout.setSpacing(0)
 
         self._layer_stack = QStackedWidget()
         self._layer_dock_blue = LayerDockWidget(
-            self, ui_font_name=self.ui_font_name, state_key='blue',
-            compare_mode=True, file_a_name=name_blue, file_b_name=name_red,
-            get_default_design=lambda: self._get_layer_dock_default_design('blue'))
-        self._layer_dock_blue.filter_state_changed.connect(self._on_compare_layer_filter_changed)
-        self._layer_dock_blue.overrides_changed.connect(self._on_compare_layer_overrides_changed)
-        self._layer_dock_blue.compare_switch_requested.connect(self._on_compare_layer_switch_requested)
+            self,
+            ui_font_name=self.ui_font_name,
+            state_key="blue",
+            compare_mode=True,
+            file_a_name=name_blue,
+            file_b_name=name_red,
+            get_default_design=lambda: self._get_layer_dock_default_design("blue"),
+        )
+        self._layer_dock_blue.filter_state_changed.connect(
+            self._on_compare_layer_filter_changed
+        )
+        self._layer_dock_blue.overrides_changed.connect(
+            self._on_compare_layer_overrides_changed
+        )
+        self._layer_dock_blue.compare_switch_requested.connect(
+            self._on_compare_layer_switch_requested
+        )
         self._layer_stack.addWidget(self._layer_dock_blue)
         self.layer_dock_splitter_sizes = self._layer_dock_blue._splitter.sizes()
-        self._layer_dock_blue.splitter_sizes_changed.connect(self._on_compare_layer_splitter_changed)
-        self._layer_dock_blue.order_changed.connect(self._on_compare_layer_order_changed)
+        self._layer_dock_blue.splitter_sizes_changed.connect(
+            self._on_compare_layer_splitter_changed
+        )
+        self._layer_dock_blue.order_changed.connect(
+            self._on_compare_layer_order_changed
+        )
         self._layer_dock_red = LayerDockWidget(
-            self, ui_font_name=self.ui_font_name, state_key='red',
-            compare_mode=True, file_a_name=name_blue, file_b_name=name_red,
-            get_default_design=lambda: self._get_layer_dock_default_design('red'))
-        self._layer_dock_red.filter_state_changed.connect(self._on_compare_layer_filter_changed)
-        self._layer_dock_red.overrides_changed.connect(self._on_compare_layer_overrides_changed)
-        self._layer_dock_red.compare_switch_requested.connect(self._on_compare_layer_switch_requested)
-        self._layer_dock_red.splitter_sizes_changed.connect(self._on_compare_layer_splitter_changed)
+            self,
+            ui_font_name=self.ui_font_name,
+            state_key="red",
+            compare_mode=True,
+            file_a_name=name_blue,
+            file_b_name=name_red,
+            get_default_design=lambda: self._get_layer_dock_default_design("red"),
+        )
+        self._layer_dock_red.filter_state_changed.connect(
+            self._on_compare_layer_filter_changed
+        )
+        self._layer_dock_red.overrides_changed.connect(
+            self._on_compare_layer_overrides_changed
+        )
+        self._layer_dock_red.compare_switch_requested.connect(
+            self._on_compare_layer_switch_requested
+        )
+        self._layer_dock_red.splitter_sizes_changed.connect(
+            self._on_compare_layer_splitter_changed
+        )
         self._layer_dock_red.order_changed.connect(self._on_compare_layer_order_changed)
         self._layer_stack.addWidget(self._layer_dock_red)
         layer_dock_layout.addWidget(self._layer_stack, 1)
@@ -490,40 +641,54 @@ class ComparePlotPopup(QMainWindow):
         self._layer_scroll_sync_block = False
         vbar_blue = self._layer_dock_blue._design_scroll.verticalScrollBar()
         vbar_red = self._layer_dock_red._design_scroll.verticalScrollBar()
+
         def _sync_scroll_to_red(value):
             if self._layer_scroll_sync_block:
                 return
             self._layer_scroll_sync_block = True
             vbar_red.setValue(value)
             self._layer_scroll_sync_block = False
+
         def _sync_scroll_to_blue(value):
             if self._layer_scroll_sync_block:
                 return
             self._layer_scroll_sync_block = True
             vbar_blue.setValue(value)
             self._layer_scroll_sync_block = False
+
         vbar_blue.valueChanged.connect(_sync_scroll_to_red)
         vbar_red.valueChanged.connect(_sync_scroll_to_blue)
 
         self.layer_dock_widget.setWidget(self._layer_dock_container)
-        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.layer_dock_widget)
+        self.addDockWidget(
+            Qt.DockWidgetArea.RightDockWidgetArea, self.layer_dock_widget
+        )
 
         def _get_label_column(df):
             if df is None:
                 return None
-            return 'Label' if 'Label' in df.columns else ('label' if 'label' in df.columns else None)
+            return (
+                "Label"
+                if "Label" in df.columns
+                else ("label" if "label" in df.columns else None)
+            )
 
         def _feed_layer_vowels():
-            d_blue = (data_blue_item or {}).get('df')
-            d_red = (data_red_item or {}).get('df')
+            d_blue = (data_blue_item or {}).get("df")
+            d_red = (data_red_item or {}).get("df")
             lbl_col_blue = _get_label_column(d_blue)
             lbl_col_red = _get_label_column(d_red)
             if d_blue is not None and lbl_col_blue:
-                vowels_blue = sorted(d_blue[lbl_col_blue].dropna().astype(str).unique().tolist())
+                vowels_blue = sorted(
+                    d_blue[lbl_col_blue].dropna().astype(str).unique().tolist()
+                )
                 self._layer_dock_blue.set_vowels(vowels_blue)
             if d_red is not None and lbl_col_red:
-                vowels_red = sorted(d_red[lbl_col_red].dropna().astype(str).unique().tolist())
+                vowels_red = sorted(
+                    d_red[lbl_col_red].dropna().astype(str).unique().tolist()
+                )
                 self._layer_dock_red.set_vowels(vowels_red)
+
         _feed_layer_vowels()
         self._layer_dock_blue.set_compare_file_index(0)
         self._layer_dock_red.set_compare_file_index(0)
@@ -532,13 +697,27 @@ class ComparePlotPopup(QMainWindow):
 
     def _on_dock_state_changed(self, *args):
         tools_floating = self.dock_widget.isFloating()
-        layer_floating = self.layer_dock_widget.isFloating() if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget else True
+        layer_floating = (
+            self.layer_dock_widget.isFloating()
+            if hasattr(self, "layer_dock_widget") and self.layer_dock_widget
+            else True
+        )
         if tools_floating and layer_floating:
             self.sep_left.hide()
             self.sep_right.hide()
         else:
-            sep_left_show = not tools_floating and self.dockWidgetArea(self.dock_widget) == Qt.DockWidgetArea.LeftDockWidgetArea
-            sep_right_show = not layer_floating and self.dockWidgetArea(self.layer_dock_widget) == Qt.DockWidgetArea.RightDockWidgetArea if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget else False
+            sep_left_show = (
+                not tools_floating
+                and self.dockWidgetArea(self.dock_widget)
+                == Qt.DockWidgetArea.LeftDockWidgetArea
+            )
+            sep_right_show = (
+                not layer_floating
+                and self.dockWidgetArea(self.layer_dock_widget)
+                == Qt.DockWidgetArea.RightDockWidgetArea
+                if hasattr(self, "layer_dock_widget") and self.layer_dock_widget
+                else False
+            )
             self.sep_left.setVisible(sep_left_show)
             self.sep_right.setVisible(sep_right_show)
 
@@ -556,7 +735,9 @@ class ComparePlotPopup(QMainWindow):
         lbl_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         legend_group.addWidget(lbl_title)
 
-        def create_legend_item(group_id, default_color, default_style, file_name, default_marker='o'):
+        def create_legend_item(
+            group_id, default_color, default_style, file_name, default_marker="o"
+        ):
             row = QWidget()
             rlayout = QHBoxLayout(row)
             rlayout.setContentsMargins(0, 0, 0, 0)
@@ -564,7 +745,9 @@ class ComparePlotPopup(QMainWindow):
 
             icon_lbl = QLabel()
             icon_lbl.setFixedSize(50, 16)
-            icon_lbl.setPixmap(create_legend_icon_design(default_color, default_style, default_marker))
+            icon_lbl.setPixmap(
+                create_legend_icon_design(default_color, default_style, default_marker)
+            )
 
             lbl_a = QLabel("a")
             lbl_a.setFont(font_bold)
@@ -576,7 +759,9 @@ class ComparePlotPopup(QMainWindow):
             lbl_text.setFont(font_normal)
             lbl_text.setStyleSheet("color: #333333;")
             lbl_text.setToolTip(clean_name)
-            lbl_text.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            lbl_text.setSizePolicy(
+                QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred
+            )
 
             rlayout.addWidget(icon_lbl)
             rlayout.addSpacing(6)
@@ -584,11 +769,15 @@ class ComparePlotPopup(QMainWindow):
             rlayout.addSpacing(15)
             rlayout.addWidget(lbl_text, stretch=1)
 
-            self.legend_refs[group_id] = {'icon': icon_lbl, 'text': lbl_a}
+            self.legend_refs[group_id] = {"icon": icon_lbl, "text": lbl_a}
             return row
 
-        legend_group.addWidget(create_legend_item("blue", "#1976D2", "-", data_blue, "o"))
-        legend_group.addWidget(create_legend_item("red", "#E64A19", "---", data_red, "o"))
+        legend_group.addWidget(
+            create_legend_item("blue", "#1976D2", "-", data_blue, "o")
+        )
+        legend_group.addWidget(
+            create_legend_item("red", "#E64A19", "---", data_red, "o")
+        )
         layout.addLayout(legend_group)
         legend_group.addSpacing(8)
 
@@ -599,7 +788,9 @@ class ComparePlotPopup(QMainWindow):
         lbl_norm_title = QLabel("정규화", font=font_bold)
         lbl_norm_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         norm_group.addWidget(lbl_norm_title)
-        self.lbl_norm_value = QLabel(getattr(self, 'normalization', None) or "없음", font=font_normal)
+        self.lbl_norm_value = QLabel(
+            getattr(self, "normalization", None) or "없음", font=font_normal
+        )
         self.lbl_norm_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lbl_norm_value.setStyleSheet("color: #606266;")
         norm_group.addWidget(self.lbl_norm_value)
@@ -626,17 +817,17 @@ class ComparePlotPopup(QMainWindow):
         f1_row = QHBoxLayout()
         self.lbl_f1_axis = QLabel(f"F1:", font=font_normal)
         self.lbl_f1_axis.setFixedWidth(AXIS_LABEL_WIDTH)
-        self.range_widgets['y_min'] = QLineEdit()
-        self.range_widgets['y_max'] = QLineEdit()
-        for le in (self.range_widgets['y_min'], self.range_widgets['y_max']):
+        self.range_widgets["y_min"] = QLineEdit()
+        self.range_widgets["y_max"] = QLineEdit()
+        for le in (self.range_widgets["y_min"], self.range_widgets["y_max"]):
             le.setFixedWidth(48)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
             le.setStyleSheet(clean_line_edit_style)
             le.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         f1_row.addWidget(self.lbl_f1_axis)
-        f1_row.addWidget(self.range_widgets['y_min'])
+        f1_row.addWidget(self.range_widgets["y_min"])
         f1_row.addWidget(QLabel("~", font=font_normal))
-        f1_row.addWidget(self.range_widgets['y_max'])
+        f1_row.addWidget(self.range_widgets["y_max"])
         f1_row.addSpacing(8)
         self.lbl_f1_unit = QLabel("(Hz)", font=font_normal)
         f1_row.addWidget(self.lbl_f1_unit)
@@ -646,25 +837,29 @@ class ComparePlotPopup(QMainWindow):
         f2_row = QHBoxLayout()
         self.lbl_x_axis = QLabel(f"{self.x_axis_label}:", font=font_normal)
         self.lbl_x_axis.setFixedWidth(AXIS_LABEL_WIDTH)
-        self.range_widgets['x_min'] = QLineEdit()
-        self.range_widgets['x_max'] = QLineEdit()
-        for le in (self.range_widgets['x_min'], self.range_widgets['x_max']):
+        self.range_widgets["x_min"] = QLineEdit()
+        self.range_widgets["x_max"] = QLineEdit()
+        for le in (self.range_widgets["x_min"], self.range_widgets["x_max"]):
             le.setFixedWidth(48)
             le.setAlignment(Qt.AlignmentFlag.AlignCenter)
             le.setStyleSheet(clean_line_edit_style)
             le.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         f2_row.addWidget(self.lbl_x_axis)
-        f2_row.addWidget(self.range_widgets['x_min'])
+        f2_row.addWidget(self.range_widgets["x_min"])
         f2_row.addWidget(QLabel("~", font=font_normal))
-        f2_row.addWidget(self.range_widgets['x_max'])
+        f2_row.addWidget(self.range_widgets["x_max"])
         f2_row.addSpacing(8)
         self.lbl_f2_unit = QLabel("(Hz)", font=font_normal)
         f2_row.addWidget(self.lbl_f2_unit)
         f2_row.addStretch()
         range_group.addLayout(f2_row)
 
-        range_edits = [self.range_widgets['y_min'], self.range_widgets['y_max'],
-                       self.range_widgets['x_min'], self.range_widgets['x_max']]
+        range_edits = [
+            self.range_widgets["y_min"],
+            self.range_widgets["y_max"],
+            self.range_widgets["x_min"],
+            self.range_widgets["x_max"],
+        ]
         self._range_input_filter = RangeInputFilter(self)
         for le in range_edits:
             le.installEventFilter(self._range_input_filter)
@@ -688,8 +883,12 @@ class ComparePlotPopup(QMainWindow):
             btn.setFont(font_normal)
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        btn_apply.setStyleSheet("background-color: #E6A23C; color: white; font-weight: bold; border-radius: 4px;")
-        btn_reset.setStyleSheet("background-color: #909399; color: white; font-weight: bold; border-radius: 4px;")
+        btn_apply.setStyleSheet(
+            "background-color: #E6A23C; color: white; font-weight: bold; border-radius: 4px;"
+        )
+        btn_reset.setStyleSheet(
+            "background-color: #909399; color: white; font-weight: bold; border-radius: 4px;"
+        )
 
         btn_apply.clicked.connect(self._on_range_apply_clicked)
         btn_reset.clicked.connect(self.on_reset_clicked)
@@ -768,13 +967,18 @@ class ComparePlotPopup(QMainWindow):
         btn_png = QPushButton("PNG 저장")
         btn_eps = QPushButton("EPS 저장")
 
-        for btn, fmt in zip([btn_jpg, btn_png, btn_eps], ['jpg', 'png', 'eps']):
+        for btn, fmt in zip([btn_jpg, btn_png, btn_eps], ["jpg", "png", "eps"]):
             btn.setFixedHeight(34)
             btn.setFont(QFont(self.ui_font_name, 8))
             btn.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            btn.setStyleSheet("background-color: white; border: 1px solid #C0C4CC; border-radius: 4px;")
+            btn.setStyleSheet(
+                "background-color: white; border: 1px solid #C0C4CC; border-radius: 4px;"
+            )
             btn.clicked.connect(
-                lambda checked, f=fmt: self.controller.download_plot(self.figure, f, parent_window=self))
+                lambda checked, f=fmt: self.controller.download_plot(
+                    self.figure, f, parent_window=self
+                )
+            )
             save_h.addWidget(btn)
 
         export_group.addLayout(save_h)
@@ -782,61 +986,63 @@ class ComparePlotPopup(QMainWindow):
 
     def _apply_normalization_axis_ui(self):
         """정규화 플롯일 때 좌표축 레이블/단위/범위 적용. Gerstman만 읽기 전용. 정규화 없으면 정규화 섹션 숨김."""
-        norm = getattr(self, 'normalization', None)
-        if hasattr(self, 'norm_section_widget'):
+        norm = getattr(self, "normalization", None)
+        if hasattr(self, "norm_section_widget"):
             self.norm_section_widget.setVisible(bool(norm))
-        if not getattr(self, 'range_widgets', None):
+        if not getattr(self, "range_widgets", None):
             return
         if not norm:
             return
-        r = PlotEngine.NORM_RANGES.get(norm, PlotEngine.NORM_RANGES['Lobanov'])
-        if hasattr(self, 'lbl_f1_axis'):
+        r = PlotEngine.NORM_RANGES.get(norm, PlotEngine.NORM_RANGES["Lobanov"])
+        if hasattr(self, "lbl_f1_axis"):
             self.lbl_f1_axis.setText("nF1:")
-        if hasattr(self, 'lbl_x_axis'):
+        if hasattr(self, "lbl_x_axis"):
             self.lbl_x_axis.setText("nF2:")
-        if hasattr(self, 'lbl_f1_unit'):
+        if hasattr(self, "lbl_f1_unit"):
             self.lbl_f1_unit.setText("")
-        if hasattr(self, 'lbl_f2_unit'):
+        if hasattr(self, "lbl_f2_unit"):
             self.lbl_f2_unit.setText("")
-        for key in ['y_min', 'y_max', 'x_min', 'x_max']:
+        for key in ["y_min", "y_max", "x_min", "x_max"]:
             self.range_widgets[key].setText(str(r[key]))
-            self.range_widgets[key].setReadOnly(norm == 'Gerstman')
+            self.range_widgets[key].setReadOnly(norm == "Gerstman")
 
     def _update_legend_style(self):
         """디자인 설정 변경 시 범례 아이콘과 텍스트 색상을 실시간 업데이트합니다."""
         if not self.design_settings:
             return
 
-        for ds_type in ['blue', 'red']:
+        for ds_type in ["blue", "red"]:
             if ds_type in self.design_settings and ds_type in self.legend_refs:
                 cfg = self.design_settings[ds_type]
 
-                ell_color = cfg.get('ell_color')
-                if not ell_color or ell_color == 'transparent':
-                    ell_color = '#1976D2' if ds_type == 'blue' else '#E64A19'
+                ell_color = cfg.get("ell_color")
+                if not ell_color or ell_color == "transparent":
+                    ell_color = "#1976D2" if ds_type == "blue" else "#E64A19"
 
-                ell_style = cfg.get('ell_style', '-' if ds_type == 'blue' else '--')
-                centroid_marker = cfg.get('centroid_marker', 'o')
-                if centroid_marker not in ('o', 's', '^', 'D'):
-                    centroid_marker = 'o'
+                ell_style = cfg.get("ell_style", "-" if ds_type == "blue" else "--")
+                centroid_marker = cfg.get("centroid_marker", "o")
+                if centroid_marker not in ("o", "s", "^", "D"):
+                    centroid_marker = "o"
 
-                lbl_color = cfg.get('lbl_color')
-                if not lbl_color or lbl_color == 'transparent':
-                    lbl_color = '#1976D2' if ds_type == 'blue' else '#E64A19'
+                lbl_color = cfg.get("lbl_color")
+                if not lbl_color or lbl_color == "transparent":
+                    lbl_color = "#1976D2" if ds_type == "blue" else "#E64A19"
 
                 # 범례 아이콘(선과 점) 새로 그리기 — 디자인 설정과 동일한 create_legend_icon_design 사용
-                new_pixmap = create_legend_icon_design(ell_color, ell_style, centroid_marker)
-                self.legend_refs[ds_type]['icon'].setPixmap(new_pixmap)
+                new_pixmap = create_legend_icon_design(
+                    ell_color, ell_style, centroid_marker
+                )
+                self.legend_refs[ds_type]["icon"].setPixmap(new_pixmap)
 
                 # 라벨(a) 텍스트 색상 적용
-                self.legend_refs[ds_type]['text'].setStyleSheet(f"color: {lbl_color};")
+                self.legend_refs[ds_type]["text"].setStyleSheet(f"color: {lbl_color};")
 
     def _get_layer_dock_default_design(self, series):
         """레이어 도크에서 개별 오버라이드 없을 때 쓸 기본값. series='blue'|'red' → 좌측 디자인 탭의 해당 파일 설정(common+blue/red) 반환."""
-        if not hasattr(self, 'design_tab') or self.design_tab is None:
+        if not hasattr(self, "design_tab") or self.design_tab is None:
             return {}
         s = self.design_tab.get_current_settings()
-        common = s.get('common', {})
+        common = s.get("common", {})
         ind = s.get(series, {})
         return {**common, **ind}
 
@@ -844,12 +1050,12 @@ class ComparePlotPopup(QMainWindow):
         """디자인 패널의 설정이 변경되었을 때 실시간 반영을 위한 콜백"""
         self.design_settings = settings
         self._update_legend_style()
-        if hasattr(self.design_tab, 'update_legend_indicators'):
+        if hasattr(self.design_tab, "update_legend_indicators"):
             self.design_tab.update_legend_indicators(settings)
         self.on_apply()
-        if hasattr(self, '_layer_dock_blue') and self._layer_dock_blue:
+        if hasattr(self, "_layer_dock_blue") and self._layer_dock_blue:
             self._layer_dock_blue.refresh_design_ui()
-        if hasattr(self, '_layer_dock_red') and self._layer_dock_red:
+        if hasattr(self, "_layer_dock_red") and self._layer_dock_red:
             self._layer_dock_red.refresh_design_ui()
 
     def closeEvent(self, event):
@@ -858,27 +1064,27 @@ class ComparePlotPopup(QMainWindow):
 
         try:
             # 창이 닫힐 때 이 팝업과 연결된 모든 라벨 오프셋을 완전히 제거
-            if hasattr(self.controller, 'clear_label_offsets_for_popup'):
+            if hasattr(self.controller, "clear_label_offsets_for_popup"):
                 self.controller.clear_label_offsets_for_popup(self)
 
             if self.filter_panel is not None and self.filter_panel.isVisible():
                 self.filter_panel.close()
 
-            if hasattr(self, 'dock_widget') and self.dock_widget:
+            if hasattr(self, "dock_widget") and self.dock_widget:
                 self.dock_widget.close()
-            if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget:
+            if hasattr(self, "layer_dock_widget") and self.layer_dock_widget:
                 self.layer_dock_widget.close()
                 self.layer_dock_widget.deleteLater()
                 self.layer_dock_widget = None
 
-            if hasattr(self.controller, 'remove_popup'):
+            if hasattr(self.controller, "remove_popup"):
                 self.controller.remove_popup(self)
 
             # Matplotlib Figure/Canvas 명시적 해제로 메모리 누수 방지
-            if hasattr(self, 'figure') and self.figure is not None:
+            if hasattr(self, "figure") and self.figure is not None:
                 self.figure.clear()
                 self.figure = None
-            if hasattr(self, 'canvas') and self.canvas is not None:
+            if hasattr(self, "canvas") and self.canvas is not None:
                 self.canvas.deleteLater()
                 self.canvas = None
         except Exception:
@@ -890,41 +1096,61 @@ class ComparePlotPopup(QMainWindow):
         return isinstance(QApplication.focusWidget(), QLineEdit)
 
     def _bind_shortcuts(self):
-        QShortcut(QKeySequence(Qt.Key.Key_A), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            lambda: self._safe_switch_to_tab(0))
-        QShortcut(QKeySequence(Qt.Key.Key_D), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            lambda: self._safe_switch_to_tab(1))
+        QShortcut(
+            QKeySequence(Qt.Key.Key_A), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(lambda: self._safe_switch_to_tab(0))
+        QShortcut(
+            QKeySequence(Qt.Key.Key_D), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(lambda: self._safe_switch_to_tab(1))
 
-        QShortcut(QKeySequence(Qt.Key.Key_Tab), self).activated.connect(self._toggle_panels_visibility)
-        QShortcut(QKeySequence(Qt.Key.Key_R), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_ruler)
+        QShortcut(QKeySequence(Qt.Key.Key_Tab), self).activated.connect(
+            self._toggle_panels_visibility
+        )
+        QShortcut(
+            QKeySequence(Qt.Key.Key_R), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_ruler)
         QShortcut(QKeySequence("Ctrl+S"), self).activated.connect(self._safe_save_jpg)
-        QShortcut(QKeySequence("Esc"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_cancel_ruler_point)
-        QShortcut(QKeySequence("Ctrl+B"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_bold)
-        QShortcut(QKeySequence("Ctrl+I"), self, context=Qt.ShortcutContext.WindowShortcut).activated.connect(
-            self._safe_toggle_italic)
+        QShortcut(
+            QKeySequence("Esc"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_cancel_ruler_point)
+        QShortcut(
+            QKeySequence("Ctrl+B"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_bold)
+        QShortcut(
+            QKeySequence("Ctrl+I"), self, context=Qt.ShortcutContext.WindowShortcut
+        ).activated.connect(self._safe_toggle_italic)
 
     def _safe_cancel_ruler_point(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         if self.controller.ruler_tool.active:
             self.controller.ruler_tool._cancel_current_drawing()
 
     def _safe_toggle_bold(self):
-        if self._is_input_focused(): return
-        if hasattr(self, 'design_tab') and self.design_tab is not None:
-            ctrl = self.design_tab.ctrl_blue if self.design_tab.sub_tabs.currentIndex() == 0 else self.design_tab.ctrl_red
-            ctrl['btn_bold'].setChecked(not ctrl['btn_bold'].isChecked())
+        if self._is_input_focused():
+            return
+        if hasattr(self, "design_tab") and self.design_tab is not None:
+            ctrl = (
+                self.design_tab.ctrl_blue
+                if self.design_tab.sub_tabs.currentIndex() == 0
+                else self.design_tab.ctrl_red
+            )
+            ctrl["btn_bold"].setChecked(not ctrl["btn_bold"].isChecked())
 
     def _safe_toggle_italic(self):
-        if self._is_input_focused(): return
-        if hasattr(self, 'design_tab') and self.design_tab is not None:
-            ctrl = self.design_tab.ctrl_blue if self.design_tab.sub_tabs.currentIndex() == 0 else self.design_tab.ctrl_red
-            ctrl['btn_italic'].setChecked(not ctrl['btn_italic'].isChecked())
+        if self._is_input_focused():
+            return
+        if hasattr(self, "design_tab") and self.design_tab is not None:
+            ctrl = (
+                self.design_tab.ctrl_blue
+                if self.design_tab.sub_tabs.currentIndex() == 0
+                else self.design_tab.ctrl_red
+            )
+            ctrl["btn_italic"].setChecked(not ctrl["btn_italic"].isChecked())
 
     def _safe_switch_to_tab(self, index):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         if self.tab_widget.currentIndex() != index:
             self.tab_widget.setCurrentIndex(index)
 
@@ -933,17 +1159,25 @@ class ComparePlotPopup(QMainWindow):
             self.was_dock_visible = True
             self.dock_floating_state = self.dock_widget.isFloating()
             self.dock_widget.hide()
-            if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget:
+            if hasattr(self, "layer_dock_widget") and self.layer_dock_widget:
                 self.was_layer_dock_visible = self.layer_dock_widget.isVisible()
                 self.layer_dock_floating_state = self.layer_dock_widget.isFloating()
-                self._layer_dock_geometry = self.layer_dock_widget.geometry() if self.layer_dock_widget.isVisible() else self._layer_dock_geometry
+                self._layer_dock_geometry = (
+                    self.layer_dock_widget.geometry()
+                    if self.layer_dock_widget.isVisible()
+                    else self._layer_dock_geometry
+                )
                 self.layer_dock_widget.hide()
         else:
             if self.was_dock_visible:
                 if self.dock_floating_state:
                     self.dock_widget.setFloating(True)
                 self.dock_widget.show()
-            if hasattr(self, 'layer_dock_widget') and self.layer_dock_widget and self.was_layer_dock_visible:
+            if (
+                hasattr(self, "layer_dock_widget")
+                and self.layer_dock_widget
+                and self.was_layer_dock_visible
+            ):
                 if self.layer_dock_floating_state:
                     self.layer_dock_widget.setFloating(True)
                 if self._layer_dock_geometry is not None:
@@ -959,29 +1193,46 @@ class ComparePlotPopup(QMainWindow):
         self.setFocus()
         self.figure.set_size_inches(6.5, 6.5)
         try:
-            y_min = float(self.range_widgets['y_min'].text())
-            y_max = float(self.range_widgets['y_max'].text())
-            x_min = float(self.range_widgets['x_min'].text())
-            x_max = float(self.range_widgets['x_max'].text())
+            y_min = float(self.range_widgets["y_min"].text())
+            y_max = float(self.range_widgets["y_max"].text())
+            x_min = float(self.range_widgets["x_min"].text())
+            x_max = float(self.range_widgets["x_max"].text())
 
-            norm = getattr(self, 'normalization', None)
+            norm = getattr(self, "normalization", None)
             y_name = "nF1" if norm else "F1"
             x_name = "nF2" if norm else self.x_axis_label
             if y_min >= y_max:
-                QMessageBox.warning(self, "입력 오류", f"Y축({y_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.")
+                QMessageBox.warning(
+                    self,
+                    "입력 오류",
+                    f"Y축({y_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.",
+                )
                 return False
             if x_min >= x_max:
-                QMessageBox.warning(self, "입력 오류", f"X축({x_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.")
+                QMessageBox.warning(
+                    self,
+                    "입력 오류",
+                    f"X축({x_name}) 범위 오류:\n최소값이 최대값보다 작아야 합니다.",
+                )
                 return False
         except ValueError:
             QMessageBox.warning(self, "입력 오류", "숫자만 입력해주세요.")
             return False
 
-        self.controller.refresh_compare_plot(self.figure, self.canvas, self.range_widgets, None, self, self.idx_blue,
-                                             self.idx_red)
-        data_blue_item, data_red_item = self.controller.get_compare_data(self.idx_blue, self.idx_red)
-        data_blue = data_blue_item['name'] if data_blue_item else ''
-        data_red = data_red_item['name'] if data_red_item else ''
+        self.controller.refresh_compare_plot(
+            self.figure,
+            self.canvas,
+            self.range_widgets,
+            None,
+            self,
+            self.idx_blue,
+            self.idx_red,
+        )
+        data_blue_item, data_red_item = self.controller.get_compare_data(
+            self.idx_blue, self.idx_red
+        )
+        data_blue = data_blue_item["name"] if data_blue_item else ""
+        data_red = data_red_item["name"] if data_red_item else ""
         self._update_compare_window_title(data_blue, data_red)
         return True
 
@@ -991,7 +1242,8 @@ class ComparePlotPopup(QMainWindow):
             app_logger.info(config.LOG_MSG["PLOT_RANGE_APPLIED"])
 
     def _safe_toggle_ruler(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.btn_ruler.setChecked(not self.btn_ruler.isChecked())
         self.on_toggle_ruler()
 
@@ -1003,9 +1255,13 @@ class ComparePlotPopup(QMainWindow):
     def keyPressEvent(self, event):
         """T 키: 현재 디자인 서브 탭(Blue/Red)에 해당하는 라벨 위치 이동 툴만 토글."""
         if event.key() == Qt.Key.Key_T:
-            if not self._is_input_focused() and hasattr(self, 'design_tab') and self.design_tab is not None:
+            if (
+                not self._is_input_focused()
+                and hasattr(self, "design_tab")
+                and self.design_tab is not None
+            ):
                 idx = self.design_tab.sub_tabs.currentIndex()
-                series = 'blue' if idx == 0 else 'red'
+                series = "blue" if idx == 0 else "red"
                 self.controller.toggle_compare_label_move(self, series)
             return
         super().keyPressEvent(event)
@@ -1015,13 +1271,16 @@ class ComparePlotPopup(QMainWindow):
         self.controller.toggle_compare_label_move(self, series)
 
     def update_compare_label_move_style(self, series, is_on):
-        self.design_tab.ctrl_blue['btn_label_move'].setChecked(is_on and series == 'blue')
-        self.design_tab.ctrl_red['btn_label_move'].setChecked(is_on and series == 'red')
-        if hasattr(self, 'tool_indicator') and self.tool_indicator is not None:
+        self.design_tab.ctrl_blue["btn_label_move"].setChecked(
+            is_on and series == "blue"
+        )
+        self.design_tab.ctrl_red["btn_label_move"].setChecked(is_on and series == "red")
+        if hasattr(self, "tool_indicator") and self.tool_indicator is not None:
             self.tool_indicator.set_label_move_on(is_on)
 
     def _safe_open_filter(self):
-        if self._is_input_focused(): return
+        if self._is_input_focused():
+            return
         self.open_vowel_filter()
 
     def on_filter_clicked(self):
@@ -1039,17 +1298,35 @@ class ComparePlotPopup(QMainWindow):
             self.filter_panel.activateWindow()
             return
 
-        data_blue, data_red = self.controller.get_compare_data(self.idx_blue, self.idx_red)
+        data_blue, data_red = self.controller.get_compare_data(
+            self.idx_blue, self.idx_red
+        )
         if not data_blue or not data_red:
             return
-        df_blue = data_blue['df']
-        col_label_blue = 'Label' if 'Label' in df_blue.columns else 'label' if 'label' in df_blue.columns else None
+        df_blue = data_blue["df"]
+        col_label_blue = (
+            "Label"
+            if "Label" in df_blue.columns
+            else "label"
+            if "label" in df_blue.columns
+            else None
+        )
 
-        df_red = data_red['df']
-        col_label_red = 'Label' if 'Label' in df_red.columns else 'label' if 'label' in df_red.columns else None
+        df_red = data_red["df"]
+        col_label_red = (
+            "Label"
+            if "Label" in df_red.columns
+            else "label"
+            if "label" in df_red.columns
+            else None
+        )
 
         if not col_label_blue or not col_label_red:
-            QMessageBox.warning(self, "오류", "비교할 데이터 중 모음 라벨(Label) 컬럼이 누락된 파일이 있습니다.")
+            QMessageBox.warning(
+                self,
+                "오류",
+                "비교할 데이터 중 모음 라벨(Label) 컬럼이 누락된 파일이 있습니다.",
+            )
             return
 
         vowels_blue = df_blue[col_label_blue].dropna().unique().tolist()
@@ -1057,13 +1334,13 @@ class ComparePlotPopup(QMainWindow):
 
         self.filter_panel = MultiVowelFilterPanel(
             parent=self,
-            file1_name=data_blue['name'],
+            file1_name=data_blue["name"],
             vowels1=vowels_blue,
             state1=self.vowel_filter_state_blue,
-            file2_name=data_red['name'],
+            file2_name=data_red["name"],
             vowels2=vowels_red,
             state2=self.vowel_filter_state_red,
-            on_change_callback=self._on_multi_filter_changed
+            on_change_callback=self._on_multi_filter_changed,
         )
         self.filter_panel.show()
 
@@ -1094,38 +1371,40 @@ class ComparePlotPopup(QMainWindow):
 
     def _on_compare_layer_order_changed(self, order):
         sender = self.sender()
-        if sender is None: return
+        if sender is None:
+            return
         # Blue에서 바꿨으면 Red를 새로고침
         if sender == self._layer_dock_blue:
             current_red_vowels = list(self._layer_dock_red._layer_rows.keys())
             self._layer_dock_red.set_vowels(current_red_vowels)
-        
+
         # Red에서 바꿨으면 Blue를 새로고침
         if sender == self._layer_dock_red:
             current_blue_vowels = list(self._layer_dock_blue._layer_rows.keys())
             self._layer_dock_blue.set_vowels(current_blue_vowels)
 
     def _safe_save_jpg(self):
-        if self._is_input_focused(): return
-        self.controller.download_plot(self.figure, 'jpg', parent_window=self)
+        if self._is_input_focused():
+            return
+        self.controller.download_plot(self.figure, "jpg", parent_window=self)
 
     def _reset_ranges_to_default(self, apply_plot=True):
-        if not hasattr(self, 'fixed_plot_params'):
+        if not hasattr(self, "fixed_plot_params"):
             return
-        norm = getattr(self, 'normalization', None)
+        norm = getattr(self, "normalization", None)
         if norm:
-            r = PlotEngine.NORM_RANGES.get(norm, PlotEngine.NORM_RANGES['Lobanov'])
-            for k in ['y_min', 'y_max', 'x_min', 'x_max']:
+            r = PlotEngine.NORM_RANGES.get(norm, PlotEngine.NORM_RANGES["Lobanov"])
+            for k in ["y_min", "y_max", "x_min", "x_max"]:
                 self.range_widgets[k].setText(str(r[k]))
-            self.range_widgets['y_min'].setReadOnly(norm == 'Gerstman')
-            self.range_widgets['y_max'].setReadOnly(norm == 'Gerstman')
-            self.range_widgets['x_min'].setReadOnly(norm == 'Gerstman')
-            self.range_widgets['x_max'].setReadOnly(norm == 'Gerstman')
+            self.range_widgets["y_min"].setReadOnly(norm == "Gerstman")
+            self.range_widgets["y_max"].setReadOnly(norm == "Gerstman")
+            self.range_widgets["x_min"].setReadOnly(norm == "Gerstman")
+            self.range_widgets["x_max"].setReadOnly(norm == "Gerstman")
         else:
-            ptype = self.fixed_plot_params.get('type', 'f1_f2')
-            use_bark = self.fixed_plot_params.get('use_bark_units', False)
+            ptype = self.fixed_plot_params.get("type", "f1_f2")
+            use_bark = self.fixed_plot_params.get("use_bark_units", False)
             smart_ranges = self.controller.get_smart_ranges_for_params(ptype, use_bark)
-            for k in ['y_min', 'y_max', 'x_min', 'x_max']:
+            for k in ["y_min", "y_max", "x_min", "x_max"]:
                 self.range_widgets[k].setText(smart_ranges[k])
                 self.range_widgets[k].setReadOnly(False)
         self.cb_sigma.setCurrentText(str(config.DEFAULT_SIGMA))
@@ -1139,9 +1418,9 @@ class ComparePlotPopup(QMainWindow):
         self.lbl_f1_axis.setText(f"F1:")
         self.lbl_x_axis.setText(f"{self.x_axis_label}:")
 
-        if hasattr(self, 'lbl_f1_unit'):
+        if hasattr(self, "lbl_f1_unit"):
             self.lbl_f1_unit.setText(f"({f1_unit})")
-        if hasattr(self, 'lbl_f2_unit'):
+        if hasattr(self, "lbl_f2_unit"):
             self.lbl_f2_unit.setText(f"({f2_unit})")
 
     def update_x_label(self, new_label):
@@ -1151,11 +1430,11 @@ class ComparePlotPopup(QMainWindow):
     def _update_compare_window_title(self, data_blue, data_red):
         base = f"다중 플롯 모드 - {data_blue} vs {data_red}"
         mode = self.controller.get_outlier_mode()
-        if mode == '1sigma':
+        if mode == "1sigma":
             base += " (이상치 제거 : 1σ)"
-        elif mode == '2sigma':
+        elif mode == "2sigma":
             base += " (이상치 제거 : 2σ)"
-        if getattr(self, 'normalization', None):
+        if getattr(self, "normalization", None):
             base += f" / {self.normalization}"
         self.setWindowTitle(base)
 
@@ -1165,6 +1444,7 @@ class ComparePlotPopup(QMainWindow):
     def update_ruler_style(self, is_on):
         self.btn_ruler.setChecked(is_on)
         self.btn_ruler.setStyleSheet(
-            f"background-color: {'#67C23A' if is_on else '#F0F2F5'}; color: {'white' if is_on else '#333'}; font-weight: {'bold' if is_on else 'normal'}; border-radius: 4px; border: {'none' if is_on else '1px solid #DCDFE6'};")
-        if hasattr(self, 'tool_indicator') and self.tool_indicator is not None:
+            f"background-color: {'#67C23A' if is_on else '#F0F2F5'}; color: {'white' if is_on else '#333'}; font-weight: {'bold' if is_on else 'normal'}; border-radius: 4px; border: {'none' if is_on else '1px solid #DCDFE6'};"
+        )
+        if hasattr(self, "tool_indicator") and self.tool_indicator is not None:
             self.tool_indicator.set_ruler_on(is_on)
